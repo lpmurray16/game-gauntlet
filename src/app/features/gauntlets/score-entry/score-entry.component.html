@@ -1,0 +1,87 @@
+<div class="page-container">
+  @if (loading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+  </div>
+  } @else if (error()) {
+  <div class="error-banner">{{ error() }}</div>
+  } @else if (config()) {
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <a [routerLink]="['/gauntlets', gauntlet()!.id]">{{ gauntlet()!.name }}</a>
+        <span> › </span>
+        <span>Enter Results</span>
+      </div>
+      <h1>{{ config()?.title }}</h1>
+      <p class="game-meta">{{ config()?.platform }} · Game {{ gameIndex + 1 }} of {{ gauntlet()!.game_configs.length }}
+      </p>
+    </div>
+  </div>
+
+  <div class="entry-layout">
+    <div class="entry-card card">
+      @if (config()?.cover_url) {
+      <img [src]="config()!.cover_url" [alt]="config()!.title" class="game-cover-lg" />
+      }
+
+      <div class="mode-label">
+        @if (config()!.scoring_mode === 'match') {
+        <span class="mode-tag">Best of {{ config()!.best_of }} · Enter wins per player</span>
+        } @else if (config()!.scoring_mode === 'rank') {
+        <span class="mode-tag">Rank-based · Enter scores, players ranked by highest</span>
+        } @else {
+        <span class="mode-tag">Normalized · Enter scores, points proportional to winner</span>
+        }
+      </div>
+
+      <div class="players-scores">
+        @for (player of players; track player) {
+        <div class="player-score-row">
+          <span class="player-label">{{ player }}</span>
+          @if (isMatch) {
+          <div class="match-wins">
+            <button class="win-btn" (click)="matchWins[player] = (matchWins[player] || 0) - 1"
+              [disabled]="(matchWins[player] || 0) <= 0">−</button>
+            <span class="win-count">{{ matchWins[player] || 0 }}</span>
+            <button class="win-btn" (click)="matchWins[player] = (matchWins[player] || 0) + 1"
+              [disabled]="(matchWins[player] || 0) >= config()!.best_of">+</button>
+            <span class="win-label">wins</span>
+          </div>
+          } @else {
+          <input type="number" min="0" [(ngModel)]="scores[player]" class="score-input" />
+          }
+        </div>
+        }
+      </div>
+
+      @if (error()) {
+      <div class="error-msg">{{ error() }}</div>
+      }
+
+      <div class="entry-actions">
+        <a [routerLink]="['/gauntlets', gauntlet()!.id]" class="btn-ghost"
+          style="text-decoration:none;display:inline-block;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+          Cancel
+        </a>
+        <button class="btn-primary" (click)="submit()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save Results' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-card card">
+      <h3>Points Preview</h3>
+      <p class="preview-desc">Based on current input</p>
+      <div class="preview-list">
+        @for (item of getRankPreview(); track item.player) {
+        <div class="preview-row">
+          <span class="preview-player">{{ item.player }}</span>
+          <span class="preview-pts">+{{ item.pts }} pts</span>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+</div>

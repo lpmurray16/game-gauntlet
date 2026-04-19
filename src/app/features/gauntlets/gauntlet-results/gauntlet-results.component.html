@@ -1,0 +1,72 @@
+<div class="page-container">
+  @if (loading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+  </div>
+  } @else if (error()) {
+  <div class="error-banner">{{ error() }}</div>
+  } @else {
+  <div class="results-header">
+    <div class="trophy-icon">🏆</div>
+    <h1>{{ gauntlet()?.name }}</h1>
+    <p class="subtitle">Gauntlet Complete</p>
+    @if (result()?.winner) {
+    <div class="winner-banner">
+      🥇 {{ result()!.winner }} wins the Gauntlet!
+    </div>
+    }
+  </div>
+
+  <div class="results-layout">
+    <div class="standings-section card">
+      <h2>Final Standings</h2>
+      <div class="standings-list">
+        @for (entry of standings; track entry.player; let i = $index) {
+        <div class="standing-row" [class.winner]="i === 0">
+          <span class="medal">{{ getMedalEmoji(i) }}</span>
+          <span class="player-name">{{ entry.player }}</span>
+          <span class="pts">{{ entry.pts }} pts</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    @if (gauntlet()?.game_results?.length) {
+    <div class="game-breakdown card">
+      <h2>Game-by-Game Breakdown</h2>
+      @for (cfg of gauntlet()!.game_configs; track cfg.game_id) {
+      @if (getGameResult(cfg.game_id); as res) {
+      <div class="breakdown-row">
+        <div class="breakdown-game">
+          @if (cfg.cover_url) {
+          <img [src]="cfg.cover_url" class="bd-cover" alt="" />
+          }
+          <div>
+            <div class="bd-title">{{ cfg.title }}</div>
+            <div class="bd-mode">{{ cfg.scoring_mode }}</div>
+          </div>
+        </div>
+        <div class="breakdown-scores">
+          @for (player of gauntlet()!.player_names; track player) {
+          <div class="bd-score">
+            <span class="bd-player">{{ player }}</span>
+            <span class="bd-pts">+{{ $any(res.points_awarded)[player] ?? 0 }} pts</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+      }
+    </div>
+    }
+  </div>
+
+  <div class="result-actions">
+    <a routerLink="/" class="btn-secondary"
+      style="text-decoration:none;display:inline-block;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">Home</a>
+    <a routerLink="/gauntlets/new" class="btn-primary"
+      style="text-decoration:none;display:inline-block;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">New
+      Gauntlet</a>
+  </div>
+  }
+</div>

@@ -42,3 +42,15 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# PocketBase local data
+pocketbase/pb_data/
+pocketbase/pocketbase
+
+# Package lock (optional - remove if you want to commit it)
+# package-lock.json

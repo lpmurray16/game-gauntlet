@@ -1,0 +1,91 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ isEdit ? 'Edit Game' : 'Add Game' }}</h1>
+    <a routerLink="/games" class="btn-ghost"
+      style="text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+      Cancel
+    </a>
+  </div>
+
+  <div class="form-card card">
+    <div class="rawg-section">
+      <div class="form-group">
+        <label>Search RAWG Database</label>
+        <input type="text" placeholder="Type a game name to auto-fill metadata..." (input)="onRawgInput($event)"
+          (blur)="closeDropdown()" />
+        @if (rawgLoading()) {
+        <div class="rawg-hint">Searching...</div>
+        }
+      </div>
+      @if (showDropdown() && rawgResults().length > 0) {
+      <div class="rawg-dropdown">
+        @for (rg of rawgResults(); track rg.id) {
+        <div class="rawg-item" (mousedown)="selectRawgGame(rg)">
+          @if (rg.background_image) {
+          <img [src]="rg.background_image" class="rawg-thumb" [alt]="rg.name" />
+          }
+          <div class="rawg-item-info">
+            <span class="rawg-name">{{ rg.name }}</span>
+            <span class="rawg-meta">
+              {{ rg.released ? rg.released.substring(0,4) : '' }}
+              @if (rg.platforms && rg.platforms.length) { · {{ rg.platforms[0].platform.name }} }
+            </span>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <hr class="divider" />
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input id="title" type="text" [(ngModel)]="form.title" placeholder="e.g. Mortal Kombat II" />
+      </div>
+
+      <div class="form-group">
+        <label for="platform">Platform</label>
+        <input id="platform" type="text" [(ngModel)]="form.platform" placeholder="e.g. Arcade, SNES, PS3" />
+      </div>
+
+      <div class="form-group">
+        <label for="genre">Genre</label>
+        <input id="genre" type="text" [(ngModel)]="form.genre" placeholder="e.g. Fighting, Platformer" />
+      </div>
+
+      <div class="form-group">
+        <label for="year">Year</label>
+        <input id="year" type="number" [(ngModel)]="form.year" placeholder="e.g. 1993" />
+      </div>
+
+      <div class="form-group col-span-2">
+        <label for="cover_url">Cover Image URL</label>
+        <input id="cover_url" type="text" [(ngModel)]="form.cover_url" placeholder="https://..." />
+      </div>
+
+      <div class="form-group col-span-2">
+        <label for="notes">Notes</label>
+        <textarea id="notes" rows="3" [(ngModel)]="form.notes"
+          placeholder="Optional notes about this game..."></textarea>
+      </div>
+    </div>
+
+    @if (form.cover_url) {
+    <div class="cover-preview">
+      <img [src]="form.cover_url" alt="Cover preview" />
+    </div>
+    }
+
+    @if (error()) {
+    <div class="error-msg">{{ error() }}</div>
+    }
+
+    <div class="form-actions">
+      <button class="btn-primary" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Saving...' : (isEdit ? 'Save Changes' : 'Add Game') }}
+      </button>
+    </div>
+  </div>
+</div>

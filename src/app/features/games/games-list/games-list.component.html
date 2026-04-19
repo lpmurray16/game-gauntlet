@@ -1,0 +1,54 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Game Library</h1>
+    <a routerLink="/games/new" class="btn-primary" style="text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+      + Add Game
+    </a>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" placeholder="Search by title, platform or genre..." [value]="searchQuery()" (input)="onSearch($event)" />
+  </div>
+
+  @if (loading()) {
+    <div class="loading-container"><div class="spinner"></div></div>
+  } @else if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  } @else if (filteredGames.length === 0) {
+    <div class="empty-state">
+      <p>{{ searchQuery() ? 'No games match your search.' : 'No games in the library yet.' }}</p>
+      @if (!searchQuery()) {
+        <a routerLink="/games/new" class="btn-primary" style="display:inline-block;margin-top:1rem;text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">Add Your First Game</a>
+      }
+    </div>
+  } @else {
+    <div class="games-table">
+      <div class="table-header">
+        <span>Title</span>
+        <span>Platform</span>
+        <span>Genre</span>
+        <span>Year</span>
+        <span></span>
+      </div>
+      @for (game of filteredGames; track game.id) {
+        <div class="table-row">
+          <div class="game-title-cell">
+            @if (game.cover_url) {
+              <img [src]="game.cover_url" [alt]="game.title" class="cover-thumb" />
+            } @else {
+              <div class="cover-placeholder">🎮</div>
+            }
+            <span>{{ game.title }}</span>
+          </div>
+          <span class="muted">{{ game.platform || '—' }}</span>
+          <span class="muted">{{ game.genre || '—' }}</span>
+          <span class="muted">{{ game.year || '—' }}</span>
+          <div class="row-actions">
+            <a [routerLink]="['/games', game.id, 'edit']" class="btn-ghost btn-sm">Edit</a>
+            <button class="btn-danger btn-sm" (click)="deleteGame(game.id, $event)">Delete</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

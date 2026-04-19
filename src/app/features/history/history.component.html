@@ -1,0 +1,55 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>History</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-container"><div class="spinner"></div></div>
+  } @else if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  } @else if (results().length === 0) {
+    <div class="empty-state">
+      <p>No completed gauntlets yet.</p>
+      <a routerLink="/gauntlets/new" class="btn-primary" style="display:inline-block;margin-top:1rem;text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">Start a Gauntlet</a>
+    </div>
+  } @else {
+    <div class="history-list">
+      @for (result of results(); track result.id) {
+        <div class="history-card card">
+          <div class="history-card-header" (click)="toggleExpand(result.id)">
+            <div class="history-info">
+              <span class="history-name">{{ getGauntletName(result) }}</span>
+              <span class="history-meta">
+                {{ result.completed_at | date:'mediumDate' }} ·
+                {{ getPlayerCount(result) }} players
+              </span>
+            </div>
+            <div class="history-right">
+              <span class="winner-chip">🥇 {{ result.winner }}</span>
+              <span class="expand-icon">{{ expanded() === result.id ? '▲' : '▼' }}</span>
+            </div>
+          </div>
+
+          @if (expanded() === result.id) {
+            <div class="history-detail">
+              <hr class="divider" />
+              <div class="detail-standings">
+                @for (entry of getStandings(result); track entry.player; let i = $index) {
+                  <div class="detail-row">
+                    <span class="detail-rank">{{ i + 1 }}</span>
+                    <span class="detail-player">{{ entry.player }}</span>
+                    <span class="detail-pts">{{ entry.pts }} pts</span>
+                  </div>
+                }
+              </div>
+              <a [routerLink]="['/gauntlets', result.gauntlet_id, 'results']"
+                class="view-results-link">
+                View full results →
+              </a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

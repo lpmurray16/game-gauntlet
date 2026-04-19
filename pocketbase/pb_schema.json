@@ -1,0 +1,166 @@
+[
+  {
+    "id": "games0000000001",
+    "name": "games",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "games_title",
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "games_platform",
+        "name": "platform",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "games_rawg_id",
+        "name": "rawg_id",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "games_cover_url",
+        "name": "cover_url",
+        "type": "url",
+        "required": false,
+        "system": false,
+        "options": { "exceptDomains": [], "onlyDomains": [] }
+      },
+      {
+        "id": "games_genre",
+        "name": "genre",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "games_year",
+        "name": "year",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "games_notes",
+        "name": "notes",
+        "type": "editor",
+        "required": false,
+        "system": false,
+        "options": { "convertUrls": false }
+      }
+    ],
+    "indexes": []
+  },
+  {
+    "id": "gauntlets000001",
+    "name": "gauntlets",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "gauntlets_name",
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gauntlets_player_names",
+        "name": "player_names",
+        "type": "json",
+        "required": true,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      },
+      {
+        "id": "gauntlets_game_configs",
+        "name": "game_configs",
+        "type": "json",
+        "required": true,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      },
+      {
+        "id": "gauntlets_game_results",
+        "name": "game_results",
+        "type": "json",
+        "required": false,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      },
+      {
+        "id": "autodate2990389176",
+        "name": "created",
+        "type": "autodate",
+        "required": false,
+        "system": false,
+        "onCreate": true,
+        "onUpdate": false,
+        "options": {}
+      }
+    ],
+    "indexes": ["CREATE INDEX `idx_H8R7GKjzBt` ON `gauntlets` (`created`)"]
+  },
+  {
+    "id": "gauntletresults1",
+    "name": "gauntlet_results",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "gresults_final_standings",
+        "name": "final_standings",
+        "type": "json",
+        "required": true,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      },
+      {
+        "id": "gresults_winner",
+        "name": "winner",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gresults_completed_at",
+        "name": "completed_at",
+        "type": "date",
+        "required": true,
+        "system": false,
+        "options": { "min": "", "max": "" }
+      }
+    ],
+    "indexes": []
+  }
+]

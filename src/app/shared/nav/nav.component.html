@@ -1,0 +1,19 @@
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" routerLink="/">
+      <span class="nav-brand-icon">⚔</span>
+      <span>Game Gauntlet</span>
+    </a>
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <i class="fa-solid fa-house"></i><span class="nav-label">Home</span>
+      </a>
+      <a routerLink="/gauntlets/new" routerLinkActive="active">
+        <i class="fa-solid fa-plus"></i><span class="nav-label">New Gauntlet</span>
+      </a>
+      <a routerLink="/history" routerLinkActive="active">
+        <i class="fa-solid fa-trophy"></i><span class="nav-label">History</span>
+      </a>
+    </div>
+  </div>
+</nav>

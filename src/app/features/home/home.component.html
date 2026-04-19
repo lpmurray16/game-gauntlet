@@ -1,0 +1,83 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Game Gauntlet</h1>
+      <p class="subtitle">Configure, compete, conquer.</p>
+    </div>
+    <a routerLink="/gauntlets/new" class="btn-primary"
+      style="text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+      + New Gauntlet
+    </a>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+  </div>
+  } @else if (error()) {
+  <div class="error-banner">{{ error() }}</div>
+  } @else {
+
+  @if (activeGauntlets.length > 0) {
+  <section>
+    <h2 class="section-title">Active</h2>
+    <div class="gauntlet-grid">
+      @for (g of activeGauntlets; track g.id) {
+      <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card">
+        <div class="gauntlet-card-top">
+          <span class="badge badge-active">Active</span>
+          <span class="game-count">{{ g.game_results.length }}/{{ g.game_configs.length }} games</span>
+        </div>
+        <h3>{{ g.name }}</h3>
+        <p class="players">{{ g.player_names.join(' · ') }}</p>
+        <div class="card-progress-bar">
+          <div class="card-progress-fill"
+            [style.width.%]="g.game_configs.length ? (g.game_results.length / g.game_configs.length) * 100 : 0"></div>
+        </div>
+      </a>
+      }
+    </div>
+  </section>
+  }
+
+  @if (draftGauntlets.length > 0) {
+  <section>
+    <h2 class="section-title">Drafts</h2>
+    <div class="gauntlet-grid">
+      @for (g of draftGauntlets; track g.id) {
+      <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card">
+        <div class="gauntlet-card-top">
+          <span class="badge badge-draft">Draft</span>
+          <span class="game-count">{{ g.game_configs.length }} games</span>
+        </div>
+        <h3>{{ g.name }}</h3>
+        <p class="players">{{ g.player_names.join(' · ') }}</p>
+      </a>
+      }
+    </div>
+  </section>
+  }
+
+  @if (activeGauntlets.length === 0 && draftGauntlets.length === 0) {
+  <div class="empty-state">
+    <div class="empty-icon">⚔</div>
+    <h3>No active gauntlets</h3>
+    <p>Create a new gauntlet to get started.</p>
+    <a routerLink="/gauntlets/new" class="btn-primary"
+      style="display:inline-block;margin-top:1.25rem;text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+      Create Gauntlet
+    </a>
+  </div>
+  }
+
+  <div class="quick-links">
+    <a routerLink="/history" class="quick-link-card">
+      <span class="ql-icon">🏆</span>
+      <div>
+        <strong>History</strong>
+        <p>View past gauntlet results</p>
+      </div>
+    </a>
+  </div>
+  }
+</div>

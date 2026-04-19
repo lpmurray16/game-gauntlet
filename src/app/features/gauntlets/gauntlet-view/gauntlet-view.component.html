@@ -1,0 +1,100 @@
+<div class="page-container">
+  @if (loading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+  </div>
+  } @else if (error()) {
+  <div class="error-banner">{{ error() }}</div>
+  } @else if (gauntlet()) {
+  <div class="page-header">
+    <div>
+      <h1>{{ gauntlet()!.name }}</h1>
+      <span class="badge" [class]="'badge-' + gauntlet()!.status">{{ gauntlet()!.status }}</span>
+    </div>
+    <div class="header-actions">
+      @if (gauntlet()!.status === 'draft') {
+      <button class="btn-primary" (click)="startGauntlet()">Start Gauntlet ▶</button>
+      }
+      @if (gauntlet()!.status === 'active') {
+      <button class="btn-danger" (click)="finishGauntlet()" [disabled]="finishing()">
+        {{ finishing() ? 'Finishing...' : 'Finish Gauntlet' }}
+      </button>
+      }
+      @if (gauntlet()!.status === 'completed') {
+      <a [routerLink]="['/gauntlets', gauntlet()!.id, 'results']" class="btn-primary"
+        style="text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+        View Results
+      </a>
+      }
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="games-column">
+      <h2 class="col-title">Games</h2>
+      @for (cfg of gauntlet()!.game_configs; track cfg.game_id) {
+      <div class="game-row" [class.completed]="getResult(cfg.game_id)?.completed">
+        <div class="game-row-info">
+          @if (cfg.cover_url) {
+          <img [src]="cfg.cover_url" class="game-row-cover" alt="" />
+          } @else {
+          <div class="game-row-cover-placeholder">🎮</div>
+          }
+          <div>
+            <div class="game-row-title">{{ cfg.title }}</div>
+            <div class="game-row-meta">
+              {{ cfg.platform }} ·
+              <span class="scoring-badge">{{ scoringLabel(cfg.scoring_mode) }}</span>
+              @if (cfg.scoring_mode === 'match') { · Best of {{ cfg.best_of }} }
+            </div>
+          </div>
+        </div>
+
+        <div class="game-row-right">
+          @if (getResult(cfg.game_id)?.completed) {
+          <div class="result-summary">
+            @for (entry of $any(getResult(cfg.game_id)!.points_awarded) | keyvalue; track entry.key) {
+            <span class="result-chip">{{ entry.key }}: +{{ entry.value }}pts</span>
+            }
+          </div>
+          <span class="done-check">✓</span>
+          } @else if (gauntlet()!.status === 'active') {
+          <a [routerLink]="['/gauntlets', gauntlet()!.id, 'game', cfg.order - 1]" class="btn-primary btn-sm"
+            style="text-decoration:none;display:inline-block;">
+            Enter Results
+          </a>
+          } @else {
+          <span class="pending-label">Pending</span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="standings-column">
+      <h2 class="col-title">Standings</h2>
+      <div class="standings-card card">
+        @for (entry of standings; track entry[0]; let i = $index) {
+        <div class="standing-row" [class.leader]="i === 0">
+          <span class="standing-rank">{{ i + 1 }}</span>
+          <span class="standing-name">{{ entry[0] }}</span>
+          <span class="standing-pts">{{ entry[1] }} pts</span>
+        </div>
+        }
+      </div>
+
+      <div class="progress-info card">
+        <div class="progress-label">
+          <span>Progress</span>
+          <span>{{ gauntlet()!.game_results.length }} / {{ gauntlet()!.game_configs.length }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill"
+            [style.width.%]="gauntlet()!.game_configs.length ? (gauntlet()!.game_results.length / gauntlet()!.game_configs.length) * 100 : 0">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

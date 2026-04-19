@@ -1,0 +1,231 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>New Gauntlet</h1>
+    <div class="steps-indicator">
+      <span [class.active]="step() >= 1" [class.done]="step() > 1">1. Setup</span>
+      <span class="step-sep">›</span>
+      <span [class.active]="step() >= 2" [class.done]="step() > 2">2. Games</span>
+      <span class="step-sep">›</span>
+      <span [class.active]="step() >= 3">3. Scoring</span>
+    </div>
+  </div>
+
+  @if (error()) {
+  <div class="error-banner">{{ error() }}</div>
+  }
+
+  @if (step() === 1) {
+  <div class="card step-card">
+    <h2>Gauntlet Setup</h2>
+    <p class="step-desc">Name your gauntlet and add the players who will compete.</p>
+
+    <div class="form-group">
+      <label>Gauntlet Name</label>
+      <input type="text" [(ngModel)]="name" placeholder="e.g. Friday Night Gauntlet" />
+    </div>
+
+    <div class="form-group">
+      <label>Players (2–8)</label>
+      <div class="players-list">
+        @for (p of playerInputs; track trackByIndex($index)) {
+        <div class="player-row">
+          <input type="text" [(ngModel)]="playerInputs[$index]" [placeholder]="'Player ' + ($index + 1)" />
+          @if (playerInputs.length > 2) {
+          <button class="btn-ghost btn-sm remove-btn" (click)="removePlayer($index)">✕</button>
+          }
+        </div>
+        }
+      </div>
+      @if (playerInputs.length < 8) { <button class="btn-secondary btn-sm add-player-btn" (click)="addPlayer()">+ Add
+        Player</button>
+        }
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-primary" (click)="goToStep2()">Next: Select Games →</button>
+    </div>
+  </div>
+  }
+
+  @if (step() === 2) {
+  <div class="card step-card">
+    <h2>Add Games</h2>
+    <p class="step-desc">Search RAWG to auto-fill details, or enter everything manually.</p>
+
+    @if (addedGames.length > 0) {
+    <div class="added-games-list">
+      @for (game of addedGames; track trackByIndex($index)) {
+      <div class="added-game-row">
+        @if (game.cover_url) {
+        <img [src]="game.cover_url" [alt]="game.title" class="added-cover" />
+        } @else {
+        <div class="added-cover-placeholder">🎮</div>
+        }
+        <div class="added-info">
+          <span class="added-title">{{ game.title }}</span>
+          <span class="added-meta">{{ game.platform }}{{ game.year ? ' · ' + game.year : '' }}</span>
+        </div>
+        <button class="btn-ghost btn-sm" (click)="removeGame($index)">✕</button>
+      </div>
+      }
+    </div>
+    }
+
+    @if (showAddGameForm) {
+    <div class="add-game-form card">
+      <h3>Add a Game</h3>
+
+      <div class="form-group rawg-search-group">
+        <label>Search RAWG (optional)</label>
+        <div class="rawg-input-wrap">
+          <input type="text" [(ngModel)]="rawgQuery" placeholder="Search by game title..." (input)="onRawgSearch()"
+            (blur)="showRawgDropdown.set(false)" />
+          @if (rawgSearching()) { <span class="rawg-spinner">…</span> }
+        </div>
+        @if (showRawgDropdown() && rawgResults().length > 0) {
+        <div class="rawg-dropdown">
+          @for (rg of rawgResults(); track rg.id) {
+          <div class="rawg-item" (mousedown)="selectRawgGame(rg)">
+            @if (rg.background_image) {
+            <img [src]="rg.background_image" class="rawg-thumb" [alt]="rg.name" />
+            }
+            <div class="rawg-item-info">
+              <span class="rawg-name">{{ rg.name }}</span>
+              <span class="rawg-meta">
+                {{ rg.released ? rg.released.substring(0,4) : '' }}
+                @if (rg.platforms && rg.platforms.length) { · {{ rg.platforms[0].platform.name }} }
+              </span>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <hr class="divider" />
+
+      <div class="inline-fields">
+        <div class="form-group">
+          <label>Title <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="newGame.title" placeholder="Game title" />
+        </div>
+        <div class="form-group">
+          <label>Platform</label>
+          <input type="text" [(ngModel)]="newGame.platform" placeholder="e.g. PC, PS5, Switch" />
+        </div>
+      </div>
+
+      <div class="inline-fields">
+        <div class="form-group">
+          <label>Genre</label>
+          <input type="text" [(ngModel)]="newGame.genre" placeholder="e.g. Action, Sports" />
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <input type="number" [(ngModel)]="newGame.year" placeholder="e.g. 2023" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Cover Image URL</label>
+        <input type="text" [(ngModel)]="newGame.cover_url" placeholder="https://..." />
+        @if (newGame.cover_url) {
+        <img [src]="newGame.cover_url" [alt]="newGame.title" class="cover-preview" />
+        }
+      </div>
+
+      <div class="add-game-actions">
+        <button class="btn-ghost" (click)="showAddGameForm = false">Cancel</button>
+        <button class="btn-primary" (click)="confirmAddGame()">Add to Gauntlet</button>
+      </div>
+    </div>
+    } @else {
+    <button class="btn-secondary add-game-btn" (click)="openAddGame()">+ Add Game</button>
+    }
+
+    <div class="step-actions">
+      <button class="btn-ghost" (click)="step.set(1)">← Back</button>
+      <button class="btn-primary" (click)="goToStep3()" [disabled]="addedGames.length === 0">
+        Next: Configure Scoring →
+      </button>
+    </div>
+  </div>
+  }
+
+  @if (step() === 3) {
+  <div class="card step-card">
+    <h2>Configure Scoring</h2>
+    <p class="step-desc">Set the scoring mode and point values for each game.</p>
+
+    <div class="configs-list">
+      @for (cfg of gameConfigs; track cfg.game_id) {
+      <div class="config-block">
+        <div class="config-header">
+          @if (cfg.cover_url) {
+          <img [src]="cfg.cover_url" class="config-cover" alt="" />
+          }
+          <div>
+            <strong>{{ cfg.title }}</strong>
+            <span class="config-platform">{{ cfg.platform }}</span>
+          </div>
+        </div>
+
+        <div class="config-body">
+          <div class="form-group">
+            <label>Scoring Mode</label>
+            <select [(ngModel)]="cfg.scoring_mode">
+              <option value="rank">Rank-based (fixed points per position)</option>
+              <option value="normalized">Normalized (proportional to winner's score)</option>
+              <option value="match">Match / Best-of-N (winner gets flat points)</option>
+            </select>
+          </div>
+
+          @if (cfg.scoring_mode === 'match') {
+          <div class="inline-fields">
+            <div class="form-group">
+              <label>Best Of</label>
+              <input type="number" [(ngModel)]="cfg.best_of" min="1" max="9" step="2" />
+            </div>
+            <div class="form-group">
+              <label>Points for Winner</label>
+              <input type="number" [(ngModel)]="cfg.points_for_winner" min="1" />
+            </div>
+          </div>
+          }
+
+          @if (cfg.scoring_mode === 'normalized') {
+          <div class="form-group">
+            <label>Max Points (winner gets this, others scaled proportionally)</label>
+            <input type="number" [(ngModel)]="cfg.points_for_winner" min="1" />
+          </div>
+          }
+
+          @if (cfg.scoring_mode === 'rank') {
+          <div class="rank-points">
+            <label class="rank-label">Points per rank position</label>
+            <div class="rank-inputs">
+              @for (player of validPlayers; track trackByIndex($index)) {
+              <div class="rank-row">
+                <span class="rank-pos">{{ $index + 1 }}{{ $index === 0 ? 'st' : $index === 1 ? 'nd' : $index === 2 ?
+                  'rd' : 'th' }}</span>
+                <input type="number" min="0" [value]="$any(cfg.points_for_rank)[$index] ?? 0"
+                  (input)="updateRankPoints(cfg, $index, $any($event.target).value)" />
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-ghost" (click)="step.set(2)">← Back</button>
+      <button class="btn-primary" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Creating...' : 'Create Gauntlet' }}
+      </button>
+    </div>
+  </div>
+  }
+</div>
