@@ -1,4 +1,4 @@
-export type ScoringMode = 'match' | 'rank' | 'normalized';
+export type ScoringMode = 'winner' | 'rank' | 'highscore';
 export type GauntletStatus = 'draft' | 'active' | 'completed';
 
 export interface GameConfig {
@@ -13,6 +13,7 @@ export interface GameConfig {
   scoring_mode: ScoringMode;
   points_for_rank: number[];
   points_for_winner: number;
+  points_for_loser: number;
   best_of: number;
 }
 

@@ -84,12 +84,12 @@ export class GauntletViewComponent implements OnInit {
 
   scoringLabel(mode: string): string {
     switch (mode) {
-      case 'match':
-        return 'Match';
+      case 'winner':
+        return 'Who Won';
       case 'rank':
-        return 'Rank';
-      case 'normalized':
-        return 'Normalized';
+        return 'Ranked';
+      case 'highscore':
+        return 'High Score';
       default:
         return mode;
     }

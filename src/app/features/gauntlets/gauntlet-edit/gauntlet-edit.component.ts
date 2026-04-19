@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { GauntletService } from '../../../core/services/gauntlet.service';
 import { RawgService } from '../../../core/services/rawg.service';
 import { RawgGame } from '../../../core/models/game.model';
-import { GameConfig, ScoringMode } from '../../../core/models/gauntlet.model';
+import { Gauntlet, GameConfig, ScoringMode } from '../../../core/models/gauntlet.model';
 
 interface GameEntry {
   title: string;
@@ -18,21 +18,20 @@ interface GameEntry {
 }
 
 @Component({
-  selector: 'app-gauntlet-builder',
+  selector: 'app-gauntlet-edit',
   standalone: true,
-  imports: [FormsModule],
-  templateUrl: './gauntlet-builder.component.html',
-  styleUrl: './gauntlet-builder.component.scss',
+  imports: [FormsModule, RouterLink],
+  templateUrl: './gauntlet-edit.component.html',
+  styleUrl: './gauntlet-edit.component.scss',
 })
-export class GauntletBuilderComponent implements OnInit, OnDestroy {
-  step = signal(1);
+export class GauntletEditComponent implements OnInit, OnDestroy {
+  gauntlet = signal<Gauntlet | null>(null);
+  loading = signal(true);
   saving = signal(false);
   error = signal('');
 
   name = '';
-  playerInputs: string[] = ['', ''];
-
-  addedGames: GameEntry[] = [];
+  playerInputs: string[] = [];
   gameConfigs: GameConfig[] = [];
 
   showAddGameForm = false;
@@ -40,19 +39,32 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
   rawgResults = signal<RawgGame[]>([]);
   rawgSearching = signal(false);
   showRawgDropdown = signal(false);
-
   newGame: GameEntry = this.blankGame();
 
   private rawgSearch$ = new Subject<string>();
   private searchSub?: Subscription;
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private gauntletService: GauntletService,
     private rawgService: RawgService,
-    private router: Router,
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    try {
+      const g = await this.gauntletService.getById(id);
+      this.gauntlet.set(g);
+      this.name = g.name;
+      this.playerInputs = [...g.player_names];
+      this.gameConfigs = g.game_configs.map(cfg => ({ ...cfg, points_for_rank: [...cfg.points_for_rank] }));
+    } catch {
+      this.error.set('Could not load gauntlet.');
+    } finally {
+      this.loading.set(false);
+    }
+
     this.searchSub = this.rawgSearch$
       .pipe(
         debounceTime(400),
@@ -86,7 +98,7 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
   }
 
   get validPlayers() {
-    return this.playerInputs.filter((p) => p.trim().length > 0);
+    return this.playerInputs.filter(p => p.trim().length > 0);
   }
 
   addPlayer() {
@@ -97,41 +109,12 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
     if (this.playerInputs.length > 2) this.playerInputs.splice(i, 1);
   }
 
-  goToStep2() {
-    if (!this.name.trim()) {
-      this.error.set('Enter a gauntlet name.');
-      return;
-    }
-    if (this.validPlayers.length < 2) {
-      this.error.set('Add at least 2 players.');
-      return;
-    }
-    this.error.set('');
-    this.step.set(2);
+  hasResult(gameId: string): boolean {
+    return (this.gauntlet()?.game_results ?? []).some(r => r.game_id === gameId && r.completed);
   }
 
-  goToStep3() {
-    if (this.addedGames.length === 0) {
-      this.error.set('Add at least 1 game.');
-      return;
-    }
-    this.error.set('');
-    this.gameConfigs = this.addedGames.map((g, i) => ({
-      game_id: g.rawg_id || `local_${i}_${Date.now()}`,
-      title: g.title,
-      platform: g.platform,
-      cover_url: g.cover_url || undefined,
-      genre: g.genre || undefined,
-      year: g.year,
-      rawg_id: g.rawg_id || undefined,
-      order: i + 1,
-      scoring_mode: 'rank' as ScoringMode,
-      points_for_rank: [10, 6, 3, 1, 1, 1, 1, 1].slice(0, this.validPlayers.length),
-      points_for_winner: 10,
-      points_for_loser: 0,
-      best_of: 3,
-    }));
-    this.step.set(3);
+  removeGame(i: number) {
+    this.gameConfigs.splice(i, 1);
   }
 
   openAddGame() {
@@ -163,36 +146,51 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
       return;
     }
     this.error.set('');
-    this.addedGames.push({ ...this.newGame });
+    const i = this.gameConfigs.length;
+    this.gameConfigs.push({
+      game_id: this.newGame.rawg_id || `local_${i}_${Date.now()}`,
+      title: this.newGame.title,
+      platform: this.newGame.platform,
+      cover_url: this.newGame.cover_url || undefined,
+      genre: this.newGame.genre || undefined,
+      year: this.newGame.year,
+      rawg_id: this.newGame.rawg_id || undefined,
+      order: i + 1,
+      scoring_mode: 'rank' as ScoringMode,
+      points_for_rank: [10, 6, 3, 1, 1, 1, 1, 1].slice(0, this.validPlayers.length),
+      points_for_winner: 10,
+      points_for_loser: 0,
+      best_of: 3,
+    });
     this.showAddGameForm = false;
-  }
-
-  removeGame(i: number) {
-    this.addedGames.splice(i, 1);
   }
 
   updateRankPoints(cfg: GameConfig, rankIdx: number, val: string) {
     cfg.points_for_rank[rankIdx] = parseInt(val) || 0;
   }
 
+  trackByIndex(index: number) {
+    return index;
+  }
+
   async save() {
+    if (!this.name.trim()) { this.error.set('Gauntlet name is required.'); return; }
+    if (this.validPlayers.length < 2) { this.error.set('At least 2 players required.'); return; }
+    if (this.gameConfigs.length === 0) { this.error.set('At least 1 game required.'); return; }
+
     this.saving.set(true);
     this.error.set('');
     try {
-      const gauntlet = await this.gauntletService.create({
+      await this.gauntletService.updateGauntlet(this.gauntlet()!.id, {
         name: this.name.trim(),
         player_names: this.validPlayers,
         game_configs: this.gameConfigs,
       });
-      this.router.navigate(['/gauntlets', gauntlet.id]);
+      this.router.navigate(['/gauntlets', this.gauntlet()!.id]);
     } catch {
-      this.error.set('Failed to create gauntlet. Please try again.');
+      this.error.set('Failed to save changes.');
     } finally {
       this.saving.set(false);
     }
-  }
-
-  trackByIndex(index: number) {
-    return index;
   }
 }

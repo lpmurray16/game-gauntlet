@@ -12,6 +12,12 @@
       <span class="badge" [class]="'badge-' + gauntlet()!.status">{{ gauntlet()!.status }}</span>
     </div>
     <div class="header-actions">
+      @if (gauntlet()!.status !== 'completed') {
+      <a [routerLink]="['/gauntlets', gauntlet()!.id, 'edit']" class="btn-ghost"
+        style="text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+        <i class="fa-solid fa-pen-to-square"></i><span class="btn-label"> Edit</span>
+      </a>
+      }
       @if (gauntlet()!.status === 'draft') {
       <button class="btn-primary" (click)="startGauntlet()">Start Gauntlet ▶</button>
       }
@@ -45,7 +51,6 @@
             <div class="game-row-meta">
               {{ cfg.platform }} ·
               <span class="scoring-badge">{{ scoringLabel(cfg.scoring_mode) }}</span>
-              @if (cfg.scoring_mode === 'match') { · Best of {{ cfg.best_of }} }
             </div>
           </div>
         </div>

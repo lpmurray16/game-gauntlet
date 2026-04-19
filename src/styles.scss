@@ -4,9 +4,9 @@
   --color-bg-elevated: #1e2330;
   --color-border: #2a2f3f;
   --color-border-hover: #3d4560;
-  --color-primary: #6c63ff;
-  --color-primary-hover: #857dff;
-  --color-primary-dim: rgba(108, 99, 255, 0.15);
+  --color-primary: #ff7a1a;
+  --color-primary-hover: #ff9240;
+  --color-primary-dim: rgba(255, 122, 26, 0.15);
   --color-accent: #ff6b6b;
   --color-accent-hover: #ff8e8e;
   --color-success: #4caf80;
@@ -187,7 +187,7 @@ button {
   }
 
   &.badge-completed {
-    background: rgba(108, 99, 255, 0.15);
+    background: rgba(255, 122, 26, 0.15);
     color: var(--color-primary);
   }
 }

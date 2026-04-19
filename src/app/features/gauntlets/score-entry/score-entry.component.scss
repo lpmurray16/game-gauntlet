@@ -76,6 +76,23 @@
   width: 120px;
 }
 
+.winner-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  input[type="radio"] {
+    width: auto;
+    accent-color: var(--color-primary);
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .match-wins {
   display: flex;
   align-items: center;

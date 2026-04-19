@@ -1,12 +1,20 @@
 <div class="page-container">
+  @if (loading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+  </div>
+  } @else if (!gauntlet()) {
+  <div class="error-banner">{{ error() }}</div>
+  } @else {
+
   <div class="page-header">
-    <h1>New Gauntlet</h1>
-    <div class="steps-indicator">
-      <span [class.active]="step() >= 1" [class.done]="step() > 1">1. Setup</span>
-      <span class="step-sep">›</span>
-      <span [class.active]="step() >= 2" [class.done]="step() > 2">2. Games</span>
-      <span class="step-sep">›</span>
-      <span [class.active]="step() >= 3">3. Scoring</span>
+    <div>
+      <div class="breadcrumb">
+        <a [routerLink]="['/gauntlets', gauntlet()!.id]">{{ gauntlet()!.name }}</a>
+        <span> › </span>
+        <span>Edit</span>
+      </div>
+      <h1>Edit Gauntlet</h1>
     </div>
   </div>
 
@@ -14,10 +22,9 @@
   <div class="error-banner">{{ error() }}</div>
   }
 
-  @if (step() === 1) {
-  <div class="card step-card">
-    <h2>Gauntlet Setup</h2>
-    <p class="step-desc">Name your gauntlet and add the players who will compete.</p>
+  <!-- SECTION: Name & Players -->
+  <div class="card edit-section">
+    <h2>Setup</h2>
 
     <div class="form-group">
       <label>Gauntlet Name</label>
@@ -40,61 +47,56 @@
         Player</button>
         }
     </div>
-
-    <div class="step-actions">
-      <button class="btn-primary" (click)="goToStep2()">Next: Select Games →</button>
-    </div>
   </div>
-  }
 
-  @if (step() === 2) {
-  <div class="card step-card">
-    <h2>Add Games</h2>
-    <p class="step-desc">Search RAWG to auto-fill details, or enter everything manually.</p>
+  <!-- SECTION: Games -->
+  <div class="card edit-section">
+    <h2>Games</h2>
 
-    @if (addedGames.length > 0) {
+    @if (gameConfigs.length > 0) {
     <div class="added-games-list">
-      @for (game of addedGames; track trackByIndex($index)) {
+      @for (cfg of gameConfigs; track cfg.game_id; let i = $index) {
       <div class="added-game-row">
-        @if (game.cover_url) {
-        <img [src]="game.cover_url" [alt]="game.title" class="added-cover" />
+        @if (cfg.cover_url) {
+        <img [src]="cfg.cover_url" class="added-game-cover" alt="" />
         } @else {
-        <div class="added-cover-placeholder">🎮</div>
+        <div class="added-game-cover-placeholder">🎮</div>
         }
-        <div class="added-info">
-          <span class="added-title">{{ game.title }}</span>
-          <span class="added-meta">{{ game.platform }}{{ game.year ? ' · ' + game.year : '' }}</span>
+        <div class="added-game-info">
+          <span class="added-game-title">{{ cfg.title }}</span>
+          <span class="added-game-meta">{{ cfg.platform }}</span>
         </div>
-        <button class="btn-ghost btn-sm" (click)="removeGame($index)">✕</button>
+        @if (hasResult(cfg.game_id)) {
+        <span class="result-lock" title="Has recorded results — cannot remove">🔒</span>
+        } @else {
+        <button class="btn-ghost btn-sm remove-btn" (click)="removeGame(i)">✕</button>
+        }
       </div>
       }
     </div>
     }
 
-    @if (showAddGameForm) {
+    @if (!showAddGameForm) {
+    <button class="btn-secondary btn-sm" style="margin-top:0.75rem" (click)="openAddGame()">+ Add Game</button>
+    } @else {
     <div class="add-game-form card">
-      <h3>Add a Game</h3>
-
-      <div class="form-group rawg-search-group">
-        <label>Search RAWG (optional)</label>
-        <div class="rawg-input-wrap">
-          <input type="text" [(ngModel)]="rawgQuery" placeholder="Search by game title..." (input)="onRawgSearch()"
-            (blur)="showRawgDropdown.set(false)" />
-          @if (rawgSearching()) { <span class="rawg-spinner">…</span> }
+      <div class="form-group">
+        <label>Search RAWG</label>
+        <div class="rawg-search-wrap">
+          <input type="text" [(ngModel)]="rawgQuery" (ngModelChange)="onRawgSearch()"
+            placeholder="Type a game name..." />
+          @if (rawgSearching()) { <span class="rawg-spinner">⏳</span> }
         </div>
-        @if (showRawgDropdown() && rawgResults().length > 0) {
+        @if (showRawgDropdown()) {
         <div class="rawg-dropdown">
           @for (rg of rawgResults(); track rg.id) {
-          <div class="rawg-item" (mousedown)="selectRawgGame(rg)">
+          <div class="rawg-item" (click)="selectRawgGame(rg)">
             @if (rg.background_image) {
-            <img [src]="rg.background_image" class="rawg-thumb" [alt]="rg.name" />
+            <img [src]="rg.background_image" class="rawg-thumb" alt="" />
             }
-            <div class="rawg-item-info">
+            <div>
               <span class="rawg-name">{{ rg.name }}</span>
-              <span class="rawg-meta">
-                {{ rg.released ? rg.released.substring(0,4) : '' }}
-                @if (rg.platforms && rg.platforms.length) { · {{ rg.platforms[0].platform.name }} }
-              </span>
+              <span class="rawg-meta">{{ rg.released ? rg.released.substring(0, 4) : '' }}</span>
             </div>
           </div>
           }
@@ -102,61 +104,48 @@
         }
       </div>
 
-      <hr class="divider" />
+      @if (newGame.cover_url) {
+      <div class="cover-preview">
+        <img [src]="newGame.cover_url" alt="Cover preview" />
+      </div>
+      }
 
       <div class="inline-fields">
         <div class="form-group">
-          <label>Title <span class="required">*</span></label>
+          <label>Title *</label>
           <input type="text" [(ngModel)]="newGame.title" placeholder="Game title" />
         </div>
         <div class="form-group">
           <label>Platform</label>
-          <input type="text" [(ngModel)]="newGame.platform" placeholder="e.g. PC, PS5, Switch" />
+          <input type="text" [(ngModel)]="newGame.platform" placeholder="e.g. PC, Switch" />
         </div>
       </div>
-
       <div class="inline-fields">
         <div class="form-group">
           <label>Genre</label>
-          <input type="text" [(ngModel)]="newGame.genre" placeholder="e.g. Action, Sports" />
+          <input type="text" [(ngModel)]="newGame.genre" placeholder="e.g. Racing" />
         </div>
         <div class="form-group">
           <label>Year</label>
           <input type="number" [(ngModel)]="newGame.year" placeholder="e.g. 2023" />
         </div>
       </div>
-
       <div class="form-group">
         <label>Cover Image URL</label>
         <input type="text" [(ngModel)]="newGame.cover_url" placeholder="https://..." />
-        @if (newGame.cover_url) {
-        <img [src]="newGame.cover_url" [alt]="newGame.title" class="cover-preview" />
-        }
       </div>
 
       <div class="add-game-actions">
-        <button class="btn-ghost" (click)="showAddGameForm = false">Cancel</button>
-        <button class="btn-primary" (click)="confirmAddGame()">Add to Gauntlet</button>
+        <button class="btn-ghost btn-sm" (click)="showAddGameForm = false">Cancel</button>
+        <button class="btn-primary btn-sm" (click)="confirmAddGame()">Add Game</button>
       </div>
     </div>
-    } @else {
-    <button class="btn-secondary add-game-btn" (click)="openAddGame()">+ Add Game</button>
     }
-
-    <div class="step-actions">
-      <button class="btn-ghost" (click)="step.set(1)">← Back</button>
-      <button class="btn-primary" (click)="goToStep3()" [disabled]="addedGames.length === 0">
-        Next: Configure Scoring →
-      </button>
-    </div>
   </div>
-  }
 
-  @if (step() === 3) {
-  <div class="card step-card">
-    <h2>Configure Scoring</h2>
-    <p class="step-desc">Set the scoring mode and point values for each game.</p>
-
+  <!-- SECTION: Scoring -->
+  <div class="card edit-section">
+    <h2>Scoring Config</h2>
     <div class="configs-list">
       @for (cfg of gameConfigs; track cfg.game_id) {
       <div class="config-block">
@@ -168,8 +157,12 @@
             <strong>{{ cfg.title }}</strong>
             <span class="config-platform">{{ cfg.platform }}</span>
           </div>
+          @if (hasResult(cfg.game_id)) {
+          <span class="result-lock-inline" title="Scoring locked — results already recorded">🔒 Locked</span>
+          }
         </div>
 
+        @if (!hasResult(cfg.game_id)) {
         <div class="config-body">
           <div class="form-group">
             <label>Scoring Mode</label>
@@ -209,7 +202,7 @@
               <div class="rank-row">
                 <span class="rank-pos">{{ $index + 1 }}{{ $index === 0 ? 'st' : $index === 1 ? 'nd' : $index === 2 ?
                   'rd' : 'th' }}</span>
-                <input type="number" min="0" [value]="$any(cfg.points_for_rank)[$index] ?? 0"
+                <input type="number" min="0" [value]="cfg.points_for_rank[$index] || 0"
                   (input)="updateRankPoints(cfg, $index, $any($event.target).value)" />
               </div>
               }
@@ -217,16 +210,21 @@
           </div>
           }
         </div>
+        }
       </div>
       }
     </div>
-
-    <div class="step-actions">
-      <button class="btn-ghost" (click)="step.set(2)">← Back</button>
-      <button class="btn-primary" (click)="save()" [disabled]="saving()">
-        {{ saving() ? 'Creating...' : 'Create Gauntlet' }}
-      </button>
-    </div>
   </div>
+
+  <div class="edit-actions">
+    <a [routerLink]="['/gauntlets', gauntlet()!.id]" class="btn-ghost"
+      style="text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
+      Cancel
+    </a>
+    <button class="btn-primary" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Saving...' : 'Save Changes' }}
+    </button>
+  </div>
+
   }
 </div>

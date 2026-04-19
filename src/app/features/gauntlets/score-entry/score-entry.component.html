@@ -26,12 +26,12 @@
       }
 
       <div class="mode-label">
-        @if (config()!.scoring_mode === 'match') {
-        <span class="mode-tag">Best of {{ config()!.best_of }} · Enter wins per player</span>
+        @if (config()!.scoring_mode === 'winner') {
+        <span class="mode-tag">Who Won · Select the winner</span>
         } @else if (config()!.scoring_mode === 'rank') {
-        <span class="mode-tag">Rank-based · Enter scores, players ranked by highest</span>
+        <span class="mode-tag">Ranked · Enter scores, highest score = 1st place</span>
         } @else {
-        <span class="mode-tag">Normalized · Enter scores, points proportional to winner</span>
+        <span class="mode-tag">High Score · Enter scores, winner pts + performance bonus</span>
         }
       </div>
 
@@ -39,15 +39,12 @@
         @for (player of players; track player) {
         <div class="player-score-row">
           <span class="player-label">{{ player }}</span>
-          @if (isMatch) {
-          <div class="match-wins">
-            <button class="win-btn" (click)="matchWins[player] = (matchWins[player] || 0) - 1"
-              [disabled]="(matchWins[player] || 0) <= 0">−</button>
-            <span class="win-count">{{ matchWins[player] || 0 }}</span>
-            <button class="win-btn" (click)="matchWins[player] = (matchWins[player] || 0) + 1"
-              [disabled]="(matchWins[player] || 0) >= config()!.best_of">+</button>
-            <span class="win-label">wins</span>
-          </div>
+          @if (isWinner) {
+          <label class="winner-radio">
+            <input type="radio" name="winner_pick" [value]="1" [checked]="winner[player] === 1"
+              (change)="selectWinner(player)" />
+            Won
+          </label>
           } @else {
           <input type="number" min="0" [(ngModel)]="scores[player]" class="score-input" />
           }

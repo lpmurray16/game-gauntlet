@@ -2,17 +2,18 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { GauntletService } from '../../core/services/gauntlet.service';
-import { GauntletResult } from '../../core/models/gauntlet.model';
+import { Gauntlet, GauntletResult } from '../../core/models/gauntlet.model';
 
 @Component({
   selector: 'app-history',
   standalone: true,
   imports: [RouterLink, DatePipe],
   templateUrl: './history.component.html',
-  styleUrl: './history.component.scss'
+  styleUrl: './history.component.scss',
 })
 export class HistoryComponent implements OnInit {
   results = signal<GauntletResult[]>([]);
+  gauntlets = signal<Gauntlet[]>([]);
   loading = signal(true);
   error = signal('');
   expanded = signal<string | null>(null);
@@ -21,8 +22,12 @@ export class HistoryComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const all = await this.gauntletService.getResults();
-      this.results.set(all);
+      const [results, gauntlets] = await Promise.all([
+        this.gauntletService.getResults(),
+        this.gauntletService.getAll(),
+      ]);
+      this.results.set(results);
+      this.gauntlets.set(gauntlets);
     } catch {
       this.error.set('Could not load history. Is PocketBase running?');
     } finally {
@@ -41,7 +46,10 @@ export class HistoryComponent implements OnInit {
   }
 
   getGauntletName(result: GauntletResult): string {
-    return result.expand?.gauntlet_id?.name ?? `Gauntlet ${result.gauntlet_id}`;
+    return (
+      this.gauntlets().find((g) => g.id === result.gauntlet_id)?.name ??
+      `Gauntlet ${result.gauntlet_id}`
+    );
   }
 
   getPlayerCount(result: GauntletResult): number {

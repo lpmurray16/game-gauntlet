@@ -21,7 +21,7 @@ export class ScoreEntryComponent implements OnInit {
 
   gameIndex = 0;
   scores: Record<string, number> = {};
-  matchWins: Record<string, number> = {};
+  winner: Record<string, number> = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +44,7 @@ export class ScoreEntryComponent implements OnInit {
         const existing = g.game_results.find((r) => r.game_id === cfg.game_id);
         for (const p of g.player_names) {
           this.scores[p] = existing?.scores[p] ?? 0;
-          this.matchWins[p] = existing?.scores[p] ?? 0;
+          this.winner[p] = existing?.scores[p] ?? 0;
         }
       }
     } catch {
@@ -54,12 +54,22 @@ export class ScoreEntryComponent implements OnInit {
     }
   }
 
-  get isMatch() {
-    return this.config()?.scoring_mode === 'match';
+  get isWinner() {
+    return this.config()?.scoring_mode === 'winner';
+  }
+
+  get isHighscore() {
+    return this.config()?.scoring_mode === 'highscore';
   }
 
   get players(): string[] {
     return this.gauntlet()?.player_names ?? [];
+  }
+
+  selectWinner(player: string) {
+    for (const p of this.players) {
+      this.winner[p] = p === player ? 1 : 0;
+    }
   }
 
   async submit() {
@@ -70,7 +80,7 @@ export class ScoreEntryComponent implements OnInit {
     this.saving.set(true);
     this.error.set('');
     try {
-      const rawScores = this.isMatch ? { ...this.matchWins } : { ...this.scores };
+      const rawScores = this.isWinner ? { ...this.winner } : { ...this.scores };
       const pointsAwarded = calculatePoints(cfg, rawScores);
       const result: GameResult = {
         game_id: cfg.game_id,
@@ -91,7 +101,7 @@ export class ScoreEntryComponent implements OnInit {
   getRankPreview(): { player: string; pts: number }[] {
     const cfg = this.config();
     if (!cfg) return [];
-    const rawScores = this.isMatch ? { ...this.matchWins } : { ...this.scores };
+    const rawScores = this.isWinner ? { ...this.winner } : { ...this.scores };
     const pts = calculatePoints(cfg, rawScores);
     return Object.entries(pts)
       .map(([player, p]) => ({ player, pts: p }))

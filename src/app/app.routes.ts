@@ -27,6 +27,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'gauntlets/:id/edit',
+    loadComponent: () =>
+      import('./features/gauntlets/gauntlet-edit/gauntlet-edit.component').then(
+        (m) => m.GauntletEditComponent,
+      ),
+  },
+  {
     path: 'gauntlets/:id',
     loadComponent: () =>
       import('./features/gauntlets/gauntlet-view/gauntlet-view.component').then(

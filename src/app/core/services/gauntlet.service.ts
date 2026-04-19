@@ -34,6 +34,22 @@ export class GauntletService {
     return this.deserialize(record);
   }
 
+  async updateGauntlet(
+    id: string,
+    data: {
+      name: string;
+      player_names: string[];
+      game_configs: GameConfig[];
+    },
+  ): Promise<Gauntlet> {
+    const record = await this.pbs.pb.collection(this.col).update(id, {
+      name: data.name,
+      player_names: JSON.stringify(data.player_names),
+      game_configs: JSON.stringify(data.game_configs),
+    });
+    return this.deserialize(record);
+  }
+
   async updateStatus(id: string, status: 'draft' | 'active' | 'completed'): Promise<Gauntlet> {
     const record = await this.pbs.pb.collection(this.col).update(id, { status });
     return this.deserialize(record);
