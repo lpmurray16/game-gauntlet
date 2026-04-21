@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { GauntletService } from '../../../core/services/gauntlet.service';
-import { GauntletResult, Gauntlet } from '../../../core/models/gauntlet.model';
+import { GauntletResult, Gauntlet, GameResult } from '../../../core/models/gauntlet.model';
 
 @Component({
   selector: 'app-gauntlet-results',
@@ -13,6 +13,7 @@ import { GauntletResult, Gauntlet } from '../../../core/models/gauntlet.model';
 export class GauntletResultsComponent implements OnInit {
   result = signal<GauntletResult | null>(null);
   gauntlet = signal<Gauntlet | null>(null);
+  gameResults = signal<GameResult[]>([]);
   loading = signal(true);
   error = signal('');
 
@@ -24,12 +25,14 @@ export class GauntletResultsComponent implements OnInit {
   async ngOnInit() {
     const gauntletId = this.route.snapshot.paramMap.get('id')!;
     try {
-      const [g, res] = await Promise.all([
+      const [g, res, results] = await Promise.all([
         this.gauntletService.getById(gauntletId),
         this.gauntletService.getResultByGauntletId(gauntletId),
+        this.gauntletService.getGameResults(gauntletId),
       ]);
       this.gauntlet.set(g);
       this.result.set(res);
+      this.gameResults.set(results);
     } catch {
       this.error.set('Could not load results.');
     } finally {
@@ -45,8 +48,8 @@ export class GauntletResultsComponent implements OnInit {
       .sort((a, b) => b.pts - a.pts);
   }
 
-  getGameResult(gameId: string) {
-    return this.gauntlet()?.game_results.find((r) => r.game_id === gameId);
+  getGameResult(gameId: string): GameResult | undefined {
+    return this.gameResults().find((r) => r.game_id === gameId);
   }
 
   getMedalEmoji(rank: number): string {

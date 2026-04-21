@@ -6,7 +6,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { GauntletService } from '../../../core/services/gauntlet.service';
 import { RawgService } from '../../../core/services/rawg.service';
 import { RawgGame } from '../../../core/models/game.model';
-import { Gauntlet, GameConfig, ScoringMode } from '../../../core/models/gauntlet.model';
+import { Gauntlet, GauntletGame, ScoringMode } from '../../../core/models/gauntlet.model';
 
 interface GameEntry {
   title: string;
@@ -32,7 +32,8 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
 
   name = '';
   playerInputs: string[] = [];
-  gameConfigs: GameConfig[] = [];
+  games: GauntletGame[] = [];
+  originalGames: GauntletGame[] = []; // Track existing games
 
   showAddGameForm = false;
   rawgQuery = '';
@@ -54,11 +55,15 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     try {
-      const g = await this.gauntletService.getById(id);
+      const [g, games] = await Promise.all([
+        this.gauntletService.getById(id),
+        this.gauntletService.getGames(id),
+      ]);
       this.gauntlet.set(g);
       this.name = g.name;
       this.playerInputs = [...g.player_names];
-      this.gameConfigs = g.game_configs.map(cfg => ({ ...cfg, points_for_rank: [...cfg.points_for_rank] }));
+      this.games = games.map((game) => ({ ...game, points_for_rank: [...game.points_for_rank] }));
+      this.originalGames = [...this.games];
     } catch {
       this.error.set('Could not load gauntlet.');
     } finally {
@@ -98,7 +103,7 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
   }
 
   get validPlayers() {
-    return this.playerInputs.filter(p => p.trim().length > 0);
+    return this.playerInputs.filter((p) => p.trim().length > 0);
   }
 
   addPlayer() {
@@ -110,11 +115,17 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
   }
 
   hasResult(gameId: string): boolean {
-    return (this.gauntlet()?.game_results ?? []).some(r => r.game_id === gameId && r.completed);
+    // Games with tournament_mode=false need results; games with tournament_mode=true need matches
+    const game = this.games.find((g) => g.id === gameId);
+    if (!game) return false;
+    if (game.tournament_mode) {
+      return game.completed; // Tournament games marked completed at game level
+    }
+    return game.completed; // Regular games marked completed when result saved
   }
 
   removeGame(i: number) {
-    this.gameConfigs.splice(i, 1);
+    this.games.splice(i, 1);
   }
 
   openAddGame() {
@@ -146,26 +157,30 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
       return;
     }
     this.error.set('');
-    const i = this.gameConfigs.length;
-    this.gameConfigs.push({
-      game_id: this.newGame.rawg_id || `local_${i}_${Date.now()}`,
+    const i = this.games.length;
+    this.games.push({
+      id: '', // New game, no ID yet
+      gauntlet_id: this.gauntlet()!.id,
+      order: i + 1,
       title: this.newGame.title,
       platform: this.newGame.platform,
       cover_url: this.newGame.cover_url || undefined,
       genre: this.newGame.genre || undefined,
       year: this.newGame.year,
       rawg_id: this.newGame.rawg_id || undefined,
-      order: i + 1,
       scoring_mode: 'rank' as ScoringMode,
+      tournament_mode: false,
       points_for_rank: [10, 6, 3, 1, 1, 1, 1, 1].slice(0, this.validPlayers.length),
       points_for_winner: 10,
       points_for_loser: 0,
-      best_of: 3,
+      points_per_match_win: 3,
+      points_per_match_loss: 0,
+      completed: false,
     });
     this.showAddGameForm = false;
   }
 
-  updateRankPoints(cfg: GameConfig, rankIdx: number, val: string) {
+  updateRankPoints(cfg: GauntletGame, rankIdx: number, val: string) {
     cfg.points_for_rank[rankIdx] = parseInt(val) || 0;
   }
 
@@ -174,19 +189,55 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
   }
 
   async save() {
-    if (!this.name.trim()) { this.error.set('Gauntlet name is required.'); return; }
-    if (this.validPlayers.length < 2) { this.error.set('At least 2 players required.'); return; }
-    if (this.gameConfigs.length === 0) { this.error.set('At least 1 game required.'); return; }
+    if (!this.name.trim()) {
+      this.error.set('Gauntlet name is required.');
+      return;
+    }
+    if (this.validPlayers.length < 2) {
+      this.error.set('At least 2 players required.');
+      return;
+    }
+    if (this.games.length === 0) {
+      this.error.set('At least 1 game required.');
+      return;
+    }
 
     this.saving.set(true);
     this.error.set('');
     try {
-      await this.gauntletService.updateGauntlet(this.gauntlet()!.id, {
+      const gauntletId = this.gauntlet()!.id;
+
+      // Update gauntlet metadata
+      await this.gauntletService.updateGauntlet(gauntletId, {
         name: this.name.trim(),
         player_names: this.validPlayers,
-        game_configs: this.gameConfigs,
       });
-      this.router.navigate(['/gauntlets', this.gauntlet()!.id]);
+
+      // Handle games: update existing, create new
+      for (let i = 0; i < this.games.length; i++) {
+        const game = this.games[i];
+        game.order = i + 1; // Reassign orders
+
+        if (game.id) {
+          // Update existing game
+          await this.gauntletService.updateGame(game.id, game);
+        } else {
+          // Create new game
+          await this.gauntletService.createGame({
+            ...game,
+            gauntlet_id: gauntletId,
+          });
+        }
+      }
+
+      // Handle deleted games (in originalGames but not in games)
+      for (const original of this.originalGames) {
+        if (original.id && !this.games.find((g) => g.id === original.id)) {
+          await this.gauntletService.deleteGame(original.id);
+        }
+      }
+
+      this.router.navigate(['/gauntlets', gauntletId]);
     } catch {
       this.error.set('Failed to save changes.');
     } finally {

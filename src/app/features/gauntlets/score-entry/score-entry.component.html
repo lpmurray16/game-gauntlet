@@ -5,7 +5,7 @@
   </div>
   } @else if (error()) {
   <div class="error-banner">{{ error() }}</div>
-  } @else if (config()) {
+  } @else if (game()) {
   <div class="page-header">
     <div>
       <div class="breadcrumb">
@@ -13,28 +13,93 @@
         <span> › </span>
         <span>Enter Results</span>
       </div>
-      <h1>{{ config()?.title }}</h1>
-      <p class="game-meta">{{ config()?.platform }} · Game {{ gameIndex + 1 }} of {{ gauntlet()!.game_configs.length }}
+      <h1>{{ game()?.title }}</h1>
+      <p class="game-meta">{{ game()?.platform }}
       </p>
     </div>
   </div>
 
   <div class="entry-layout">
     <div class="entry-card card">
-      @if (config()?.cover_url) {
-      <img [src]="config()!.cover_url" [alt]="config()!.title" class="game-cover-lg" />
+      @if (game()?.cover_url) {
+      <img [src]="game()!.cover_url" [alt]="game()!.title" class="game-cover-lg" />
       }
 
       <div class="mode-label">
-        @if (config()!.scoring_mode === 'winner') {
+        @if (isTournament) {
+        <span class="mode-tag">Tournament · Single elimination bracket</span>
+        } @else if (game()!.scoring_mode === 'winner') {
         <span class="mode-tag">Who Won · Select the winner</span>
-        } @else if (config()!.scoring_mode === 'rank') {
+        } @else if (game()!.scoring_mode === 'rank') {
         <span class="mode-tag">Ranked · Enter scores, highest score = 1st place</span>
         } @else {
         <span class="mode-tag">High Score · Enter scores, winner pts + performance bonus</span>
         }
       </div>
 
+      @if (isTournament) {
+      <div class="tournament-section">
+        @if (!tournamentGenerated()) {
+        <div class="generate-bracket">
+          <p>No tournament bracket generated yet.</p>
+          <button class="btn-primary" (click)="generateBracket()" [disabled]="saving()">
+            {{ saving() ? 'Generating...' : 'Generate Bracket' }}
+          </button>
+        </div>
+        } @else {
+        <div class="tournament-flow">
+          <div class="tournament-header">
+            <div class="tournament-progress">
+              <span class="progress-text">Match {{ Math.min(completedMatchesCount + 1, totalMatchesCount) }} of {{
+                totalMatchesCount }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="(completedMatchesCount / totalMatchesCount) * 100"></div>
+              </div>
+            </div>
+            <button class="btn-secondary reset-btn" (click)="resetTournament()" [disabled]="saving()">
+              Reset Tournament
+            </button>
+          </div>
+
+          @if (currentMatch; as match) {
+          <div class="current-match">
+            <div class="match-header">
+              <h3>{{ roundName }}</h3>
+              <span class="match-number">Fight {{ matchNumberInRound }}</span>
+            </div>
+
+            <div class="match-fighters">
+              @let player1Name = getMatchPlayer(match, 1);
+              @let player2Name = getMatchPlayer(match, 2);
+              <div class="fighter-card" (click)="setMatchWinner(match, player1Name)"
+                [class.winner-selected]="match.winner === player1Name">
+                <span class="fighter-name">{{ player1Name || 'TBD' }}</span>
+                <span class="fighter-label">Click to Win</span>
+              </div>
+
+              <div class="vs-divider">VS</div>
+
+              <div class="fighter-card" (click)="setMatchWinner(match, player2Name)"
+                [class.winner-selected]="match.winner === player2Name">
+                <span class="fighter-name">{{ player2Name || 'TBD' }}</span>
+                <span class="fighter-label">Click to Win</span>
+              </div>
+            </div>
+          </div>
+          } @else {
+          <div class="tournament-complete">
+            <div class="trophy">🏆</div>
+            <h3>Tournament Complete!</h3>
+            <p class="champion">Champion: {{ matches()[matches().length - 1]?.winner }}</p>
+            <button class="btn-primary" (click)="saveTournamentResults()" [disabled]="saving()">
+              {{ saving() ? 'Saving...' : 'Save Results' }}
+            </button>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      } @else {
       <div class="players-scores">
         @for (player of players; track player) {
         <div class="player-score-row">
@@ -51,6 +116,7 @@
         </div>
         }
       </div>
+      }
 
       @if (error()) {
       <div class="error-msg">{{ error() }}</div>

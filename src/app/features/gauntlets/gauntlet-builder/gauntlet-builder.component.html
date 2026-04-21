@@ -158,7 +158,7 @@
     <p class="step-desc">Set the scoring mode and point values for each game.</p>
 
     <div class="configs-list">
-      @for (cfg of gameConfigs; track cfg.game_id) {
+      @for (cfg of gameConfigs; track $index) {
       <div class="config-block">
         <div class="config-header">
           @if (cfg.cover_url) {
@@ -177,6 +177,7 @@
               <option value="winner">Who Won (winner takes all points)</option>
               <option value="rank">Ranked (configurable points per position)</option>
               <option value="highscore">High Score (enter scores, winner pts + performance bonus)</option>
+              <option value="tournament">Tournament (1v1 bracket, points per match win)</option>
             </select>
           </div>
 

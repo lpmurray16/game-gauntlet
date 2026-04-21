@@ -1,0 +1,128 @@
+[
+  {
+    "id": "gauntletgames001",
+    "name": "gauntlet_games",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "gg_order",
+        "name": "order",
+        "type": "number",
+        "required": true,
+        "system": false,
+        "options": { "min": 0, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gg_title",
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gg_platform",
+        "name": "platform",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gg_cover_url",
+        "name": "cover_url",
+        "type": "url",
+        "required": false,
+        "system": false,
+        "options": { "exceptDomains": [], "onlyDomains": [] }
+      },
+      {
+        "id": "gg_genre",
+        "name": "genre",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gg_year",
+        "name": "year",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gg_rawg_id",
+        "name": "rawg_id",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gg_tournament_mode",
+        "name": "tournament_mode",
+        "type": "bool",
+        "required": false,
+        "system": false,
+        "options": {}
+      },
+      {
+        "id": "gg_points_for_rank",
+        "name": "points_for_rank",
+        "type": "json",
+        "required": false,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      },
+      {
+        "id": "gg_points_for_winner",
+        "name": "points_for_winner",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "options": { "min": 0, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gg_points_for_loser",
+        "name": "points_for_loser",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "options": { "min": 0, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gg_points_per_match_win",
+        "name": "points_per_match_win",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "options": { "min": 0, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gg_points_per_match_loss",
+        "name": "points_per_match_loss",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "options": { "min": 0, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gg_completed",
+        "name": "completed",
+        "type": "bool",
+        "required": false,
+        "system": false,
+        "options": {}
+      }
+    ],
+    "indexes": ["CREATE INDEX `idx_gg_gauntlet` ON `gauntlet_games` (`gauntlet_id`)"]
+  }
+]

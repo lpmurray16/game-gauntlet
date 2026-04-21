@@ -31,19 +31,15 @@
       </div>
     </div>
 
-    @if (gauntlet()?.game_results?.length) {
+    @if (gameResults().length) {
     <div class="game-breakdown card">
       <h2>Game-by-Game Breakdown</h2>
-      @for (cfg of gauntlet()!.game_configs; track cfg.game_id) {
-      @if (getGameResult(cfg.game_id); as res) {
+      @for (res of gameResults(); track res.game_id) {
       <div class="breakdown-row">
         <div class="breakdown-game">
-          @if (cfg.cover_url) {
-          <img [src]="cfg.cover_url" class="bd-cover" alt="" />
-          }
           <div>
-            <div class="bd-title">{{ cfg.title }}</div>
-            <div class="bd-mode">{{ cfg.scoring_mode }}</div>
+            <div class="bd-title">Game Result</div>
+            <div class="bd-mode">{{ res.completed ? 'Completed' : 'Incomplete' }}</div>
           </div>
         </div>
         <div class="breakdown-scores">
@@ -55,7 +51,6 @@
           }
         </div>
       </div>
-      }
       }
     </div>
     }

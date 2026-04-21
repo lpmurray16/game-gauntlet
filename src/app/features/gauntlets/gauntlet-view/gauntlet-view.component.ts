@@ -2,8 +2,12 @@ import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { KeyValuePipe } from '@angular/common';
 import { GauntletService } from '../../../core/services/gauntlet.service';
-import { Gauntlet, GameConfig, GameResult } from '../../../core/models/gauntlet.model';
-import { computeStandings } from '../../../core/utils/scoring';
+import {
+  Gauntlet,
+  GauntletGame,
+  TournamentMatch,
+  GameResult,
+} from '../../../core/models/gauntlet.model';
 
 @Component({
   selector: 'app-gauntlet-view',
@@ -14,6 +18,9 @@ import { computeStandings } from '../../../core/utils/scoring';
 })
 export class GauntletViewComponent implements OnInit {
   gauntlet = signal<Gauntlet | null>(null);
+  games = signal<GauntletGame[]>([]);
+  results = signal<GameResult[]>([]);
+  matches = signal<TournamentMatch[]>([]);
   loading = signal(true);
   error = signal('');
   finishing = signal(false);
@@ -27,8 +34,16 @@ export class GauntletViewComponent implements OnInit {
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     try {
-      const g = await this.gauntletService.getById(id);
+      const [g, games, results, matches] = await Promise.all([
+        this.gauntletService.getById(id),
+        this.gauntletService.getGames(id),
+        this.gauntletService.getGameResults(id),
+        this.gauntletService.getMatches(id),
+      ]);
       this.gauntlet.set(g);
+      this.games.set(games);
+      this.results.set(results);
+      this.matches.set(matches);
     } catch {
       this.error.set('Could not load gauntlet.');
     } finally {
@@ -38,17 +53,52 @@ export class GauntletViewComponent implements OnInit {
 
   get standings() {
     const g = this.gauntlet();
+    const games = this.games();
+    const results = this.results();
+    const matches = this.matches();
     if (!g) return [];
-    const s = computeStandings(g.player_names, g.game_results);
-    return Object.entries(s).sort((a, b) => b[1] - a[1]);
+
+    // Compute standings from results and tournament matches
+    const standings: Record<string, number> = {};
+    for (const player of g.player_names) {
+      standings[player] = 0;
+    }
+
+    // Add points from non-tournament results
+    for (const result of results) {
+      for (const [player, pts] of Object.entries(result.points_awarded)) {
+        standings[player] = (standings[player] ?? 0) + pts;
+      }
+    }
+
+    // Add points from tournament matches
+    const tournamentGames = games.filter((g) => g.tournament_mode);
+    for (const game of tournamentGames) {
+      const gameMatches = matches.filter((m) => m.game_id === game.id && m.completed);
+      for (const match of gameMatches) {
+        if (match.winner) {
+          standings[match.winner] = (standings[match.winner] ?? 0) + game.points_per_match_win;
+        }
+        const loser = match.player1 === match.winner ? match.player2 : match.player1;
+        if (loser) {
+          standings[loser] = (standings[loser] ?? 0) + game.points_per_match_loss;
+        }
+      }
+    }
+
+    return Object.entries(standings).sort((a, b) => b[1] - a[1]);
   }
 
   getResult(gameId: string): GameResult | undefined {
-    return this.gauntlet()?.game_results.find((r) => r.game_id === gameId);
+    return this.results().find((r) => r.game_id === gameId);
   }
 
-  getConfig(gameId: string): GameConfig | undefined {
-    return this.gauntlet()?.game_configs.find((c) => c.game_id === gameId);
+  getGame(gameId: string): GauntletGame | undefined {
+    return this.games().find((g) => g.id === gameId);
+  }
+
+  getGameMatches(gameId: string): TournamentMatch[] {
+    return this.matches().filter((m) => m.game_id === gameId);
   }
 
   async startGauntlet() {
@@ -64,7 +114,12 @@ export class GauntletViewComponent implements OnInit {
     if (!confirm('Finish this gauntlet and record the final results?')) return;
     this.finishing.set(true);
     try {
-      const result = await this.gauntletService.finalize(g);
+      const result = await this.gauntletService.finalize(
+        g,
+        this.games(),
+        this.results(),
+        this.matches(),
+      );
       this.router.navigate(['/gauntlets', g.id, 'results']);
     } catch {
       this.error.set('Failed to finalize gauntlet.');
@@ -75,10 +130,19 @@ export class GauntletViewComponent implements OnInit {
 
   get allGamesComplete(): boolean {
     const g = this.gauntlet();
-    if (!g) return false;
-    return g.game_configs.every((cfg) => {
-      const r = this.getResult(cfg.game_id);
-      return r?.completed;
+    const games = this.games();
+    if (!g || games.length === 0) return false;
+
+    return games.every((game) => {
+      if (game.tournament_mode) {
+        // For tournament games, check if all matches are completed
+        const gameMatches = this.matches().filter((m) => m.game_id === game.id);
+        return gameMatches.length > 0 && gameMatches.every((m) => m.completed);
+      } else {
+        // For regular games, check if result is completed
+        const r = this.getResult(game.id);
+        return r?.completed;
+      }
     });
   }
 
@@ -90,6 +154,8 @@ export class GauntletViewComponent implements OnInit {
         return 'Ranked';
       case 'highscore':
         return 'High Score';
+      case 'tournament':
+        return 'Tournament';
       default:
         return mode;
     }

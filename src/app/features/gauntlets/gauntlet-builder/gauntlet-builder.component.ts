@@ -6,7 +6,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { GauntletService } from '../../../core/services/gauntlet.service';
 import { RawgService } from '../../../core/services/rawg.service';
 import { RawgGame } from '../../../core/models/game.model';
-import { GameConfig, ScoringMode } from '../../../core/models/gauntlet.model';
+import { GauntletGame, ScoringMode } from '../../../core/models/gauntlet.model';
 
 interface GameEntry {
   title: string;
@@ -33,7 +33,7 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
   playerInputs: string[] = ['', ''];
 
   addedGames: GameEntry[] = [];
-  gameConfigs: GameConfig[] = [];
+  gameConfigs: GauntletGame[] = [];
 
   showAddGameForm = false;
   rawgQuery = '';
@@ -117,19 +117,23 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
     }
     this.error.set('');
     this.gameConfigs = this.addedGames.map((g, i) => ({
-      game_id: g.rawg_id || `local_${i}_${Date.now()}`,
+      id: '', // Will be set by PocketBase
+      gauntlet_id: '', // Will be set after gauntlet creation
+      order: i + 1,
       title: g.title,
       platform: g.platform,
       cover_url: g.cover_url || undefined,
       genre: g.genre || undefined,
       year: g.year,
       rawg_id: g.rawg_id || undefined,
-      order: i + 1,
       scoring_mode: 'rank' as ScoringMode,
+      tournament_mode: false,
       points_for_rank: [10, 6, 3, 1, 1, 1, 1, 1].slice(0, this.validPlayers.length),
       points_for_winner: 10,
       points_for_loser: 0,
-      best_of: 3,
+      points_per_match_win: 3,
+      points_per_match_loss: 0,
+      completed: false,
     }));
     this.step.set(3);
   }
@@ -171,7 +175,7 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
     this.addedGames.splice(i, 1);
   }
 
-  updateRankPoints(cfg: GameConfig, rankIdx: number, val: string) {
+  updateRankPoints(cfg: GauntletGame, rankIdx: number, val: string) {
     cfg.points_for_rank[rankIdx] = parseInt(val) || 0;
   }
 
@@ -179,11 +183,21 @@ export class GauntletBuilderComponent implements OnInit, OnDestroy {
     this.saving.set(true);
     this.error.set('');
     try {
+      // Step 1: Create gauntlet (just metadata now)
       const gauntlet = await this.gauntletService.create({
         name: this.name.trim(),
         player_names: this.validPlayers,
-        game_configs: this.gameConfigs,
       });
+
+      // Step 2: Create each game as a separate record
+      for (let i = 0; i < this.gameConfigs.length; i++) {
+        const cfg = this.gameConfigs[i];
+        await this.gauntletService.createGame({
+          ...cfg,
+          gauntlet_id: gauntlet.id,
+        });
+      }
+
       this.router.navigate(['/gauntlets', gauntlet.id]);
     } catch {
       this.error.set('Failed to create gauntlet. Please try again.');

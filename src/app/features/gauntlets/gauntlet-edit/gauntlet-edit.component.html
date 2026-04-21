@@ -53,9 +53,9 @@
   <div class="card edit-section">
     <h2>Games</h2>
 
-    @if (gameConfigs.length > 0) {
+    @if (games.length > 0) {
     <div class="added-games-list">
-      @for (cfg of gameConfigs; track cfg.game_id; let i = $index) {
+      @for (cfg of games; track cfg.id; let i = $index) {
       <div class="added-game-row">
         @if (cfg.cover_url) {
         <img [src]="cfg.cover_url" class="added-game-cover" alt="" />
@@ -66,7 +66,7 @@
           <span class="added-game-title">{{ cfg.title }}</span>
           <span class="added-game-meta">{{ cfg.platform }}</span>
         </div>
-        @if (hasResult(cfg.game_id)) {
+        @if (hasResult(cfg.id)) {
         <span class="result-lock" title="Has recorded results — cannot remove">🔒</span>
         } @else {
         <button class="btn-ghost btn-sm remove-btn" (click)="removeGame(i)">✕</button>
@@ -147,7 +147,7 @@
   <div class="card edit-section">
     <h2>Scoring Config</h2>
     <div class="configs-list">
-      @for (cfg of gameConfigs; track cfg.game_id) {
+      @for (cfg of games; track cfg.id) {
       <div class="config-block">
         <div class="config-header">
           @if (cfg.cover_url) {
@@ -157,12 +157,12 @@
             <strong>{{ cfg.title }}</strong>
             <span class="config-platform">{{ cfg.platform }}</span>
           </div>
-          @if (hasResult(cfg.game_id)) {
+          @if (hasResult(cfg.id)) {
           <span class="result-lock-inline" title="Scoring locked — results already recorded">🔒 Locked</span>
           }
         </div>
 
-        @if (!hasResult(cfg.game_id)) {
+        @if (!hasResult(cfg.id)) {
         <div class="config-body">
           <div class="form-group">
             <label>Scoring Mode</label>

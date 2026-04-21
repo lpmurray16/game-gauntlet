@@ -38,8 +38,8 @@
   <div class="main-layout">
     <div class="games-column">
       <h2 class="col-title">Games</h2>
-      @for (cfg of gauntlet()!.game_configs; track cfg.game_id) {
-      <div class="game-row" [class.completed]="getResult(cfg.game_id)?.completed">
+      @for (cfg of games(); track cfg.id) {
+      <div class="game-row" [class.completed]="getResult(cfg.id)?.completed">
         <div class="game-row-info">
           @if (cfg.cover_url) {
           <img [src]="cfg.cover_url" class="game-row-cover" alt="" />
@@ -56,15 +56,15 @@
         </div>
 
         <div class="game-row-right">
-          @if (getResult(cfg.game_id)?.completed) {
+          @if (getResult(cfg.id)?.completed) {
           <div class="result-summary">
-            @for (entry of $any(getResult(cfg.game_id)!.points_awarded) | keyvalue; track entry.key) {
+            @for (entry of $any(getResult(cfg.id)!.points_awarded) | keyvalue; track entry.key) {
             <span class="result-chip">{{ entry.key }}: +{{ entry.value }}pts</span>
             }
           </div>
           <span class="done-check">✓</span>
-          } @else if (gauntlet()!.status === 'active') {
-          <a [routerLink]="['/gauntlets', gauntlet()!.id, 'game', cfg.order - 1]" class="btn-primary btn-sm"
+          } @if (gauntlet()!.status === 'active') {
+          <a [routerLink]="['/gauntlets', gauntlet()!.id, 'game', cfg.id]" class="btn-primary btn-sm"
             style="text-decoration:none;display:inline-block;">
             Enter Results
           </a>
@@ -91,11 +91,10 @@
       <div class="progress-info card">
         <div class="progress-label">
           <span>Progress</span>
-          <span>{{ gauntlet()!.game_results.length }} / {{ gauntlet()!.game_configs.length }}</span>
+          <span>{{ results().length }} / {{ games().length }}</span>
         </div>
         <div class="progress-bar">
-          <div class="progress-fill"
-            [style.width.%]="gauntlet()!.game_configs.length ? (gauntlet()!.game_results.length / gauntlet()!.game_configs.length) * 100 : 0">
+          <div class="progress-fill" [style.width.%]="games().length ? (results().length / games().length) * 100 : 0">
           </div>
         </div>
       </div>

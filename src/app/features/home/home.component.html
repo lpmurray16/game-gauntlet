@@ -26,14 +26,10 @@
       <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card">
         <div class="gauntlet-card-top">
           <span class="badge badge-active">Active</span>
-          <span class="game-count">{{ g.game_results.length }}/{{ g.game_configs.length }} games</span>
+          <span class="game-count">{{ g.player_names.length }} players</span>
         </div>
         <h3>{{ g.name }}</h3>
         <p class="players">{{ g.player_names.join(' · ') }}</p>
-        <div class="card-progress-bar">
-          <div class="card-progress-fill"
-            [style.width.%]="g.game_configs.length ? (g.game_results.length / g.game_configs.length) * 100 : 0"></div>
-        </div>
       </a>
       }
     </div>
@@ -48,7 +44,7 @@
       <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card">
         <div class="gauntlet-card-top">
           <span class="badge badge-draft">Draft</span>
-          <span class="game-count">{{ g.game_configs.length }} games</span>
+          <span class="game-count">{{ g.player_names.length }} players</span>
         </div>
         <h3>{{ g.name }}</h3>
         <p class="players">{{ g.player_names.join(' · ') }}</p>

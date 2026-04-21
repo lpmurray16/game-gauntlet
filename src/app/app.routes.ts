@@ -20,7 +20,7 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'gauntlets/:id/game/:gameIndex',
+    path: 'gauntlets/:id/game/:gameId',
     loadComponent: () =>
       import('./features/gauntlets/score-entry/score-entry.component').then(
         (m) => m.ScoreEntryComponent,

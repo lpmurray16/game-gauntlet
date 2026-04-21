@@ -1,0 +1,53 @@
+[
+  {
+    "id": "gauntletresults1",
+    "name": "gauntlet_results",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "gresults_final_standings",
+        "name": "final_standings",
+        "type": "json",
+        "required": true,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      },
+      {
+        "id": "gresults_winner",
+        "name": "winner",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gresults_completed_at",
+        "name": "completed_at",
+        "type": "date",
+        "required": true,
+        "system": false,
+        "options": { "min": "", "max": "" }
+      },
+      {
+        "id": "gresults_gauntlet_id",
+        "name": "gauntlet_id",
+        "type": "relation",
+        "required": true,
+        "system": false,
+        "options": {
+          "collectionId": "gauntlets000001",
+          "cascadeDelete": true,
+          "maxSelect": 1,
+          "minSelect": 0
+        }
+      }
+    ],
+    "indexes": ["CREATE INDEX `idx_gr_gauntlet` ON `gauntlet_results` (`gauntlet_id`)"]
+  }
+]

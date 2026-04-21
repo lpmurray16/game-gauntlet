@@ -1,0 +1,32 @@
+[
+  {
+    "id": "gauntlets000001",
+    "name": "gauntlets",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "gauntlets_name",
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gauntlets_player_names",
+        "name": "player_names",
+        "type": "json",
+        "required": true,
+        "system": false,
+        "options": { "maxSize": 2000000 }
+      }
+    ],
+    "indexes": []
+  }
+]

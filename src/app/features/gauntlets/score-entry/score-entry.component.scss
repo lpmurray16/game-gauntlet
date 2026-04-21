@@ -190,3 +190,167 @@
   padding: 0.75rem 1rem;
   font-size: 14px;
 }
+
+// Tournament styles
+.tournament-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.generate-bracket {
+  text-align: center;
+  padding: 2rem;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--color-border);
+
+  p {
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
+  }
+}
+
+.tournament-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tournament-progress {
+  flex: 1;
+
+  .progress-text {
+    display: block;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--color-bg-elevated);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+}
+
+.reset-btn {
+  font-size: 13px;
+  padding: 0.5rem 1rem;
+}
+
+.current-match {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+}
+
+.match-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0 0 0.25rem 0;
+  }
+
+  .match-number {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.match-fighters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.fighter-card {
+  flex: 1;
+  max-width: 200px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(.winner-selected) {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+  }
+
+  &.winner-selected {
+    background: var(--color-primary-dim);
+    border-color: var(--color-primary);
+
+    .fighter-label {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+  }
+}
+
+.fighter-name {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.fighter-label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vs-divider {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  padding: 0 0.5rem;
+}
+
+.tournament-complete {
+  text-align: center;
+  padding: 2rem;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+
+  .trophy {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .champion {
+    font-size: 1.25rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+}

@@ -1,7 +1,7 @@
-import { GameConfig, GameResult } from '../models/gauntlet.model';
+import { GauntletGame, GameResult } from '../models/gauntlet.model';
 
 export function calculatePoints(
-  config: GameConfig,
+  config: GauntletGame,
   scores: Record<string, number>,
 ): Record<string, number> {
   const players = Object.keys(scores);

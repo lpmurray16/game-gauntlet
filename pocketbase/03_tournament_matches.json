@@ -1,0 +1,101 @@
+[
+  {
+    "id": "gauntletmatches1",
+    "name": "tournament_matches",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      {
+        "id": "gm_gauntlet_id",
+        "name": "gauntlet_id",
+        "type": "relation",
+        "required": true,
+        "system": false,
+        "options": {
+          "collectionId": "gauntlets000001",
+          "cascadeDelete": true,
+          "maxSelect": 1,
+          "minSelect": 0
+        }
+      },
+      {
+        "id": "gm_game_id",
+        "name": "game_id",
+        "type": "relation",
+        "required": true,
+        "system": false,
+        "options": {
+          "collectionId": "gauntletgames001",
+          "cascadeDelete": true,
+          "maxSelect": 1,
+          "minSelect": 0
+        }
+      },
+      {
+        "id": "gm_round",
+        "name": "round",
+        "type": "number",
+        "required": true,
+        "system": false,
+        "options": { "min": 1, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gm_match_number",
+        "name": "match_number",
+        "type": "number",
+        "required": true,
+        "system": false,
+        "options": { "min": 1, "max": null, "noDecimal": true }
+      },
+      {
+        "id": "gm_player1",
+        "name": "player1",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gm_player2",
+        "name": "player2",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gm_winner",
+        "name": "winner",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "id": "gm_completed",
+        "name": "completed",
+        "type": "bool",
+        "required": false,
+        "system": false,
+        "options": {}
+      },
+      {
+        "id": "gm_next_match_id",
+        "name": "next_match_id",
+        "type": "text",
+        "required": false,
+        "system": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_tm_gauntlet` ON `tournament_matches` (`gauntlet_id`)",
+      "CREATE INDEX `idx_tm_game` ON `tournament_matches` (`game_id`)"
+    ]
+  }
+]
