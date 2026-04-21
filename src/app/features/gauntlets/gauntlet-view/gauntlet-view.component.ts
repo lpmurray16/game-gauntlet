@@ -64,15 +64,22 @@ export class GauntletViewComponent implements OnInit {
       standings[player] = 0;
     }
 
-    // Add points from non-tournament results
+    // Add points from non-tournament results (tournament games are recalculated from matches below)
+    const tournamentGameIds = new Set(
+      games.filter((g) => g.tournament_mode || g.scoring_mode === 'tournament').map((g) => g.id),
+    );
     for (const result of results) {
+      // Skip tournament games - their points are calculated from matches below
+      if (tournamentGameIds.has(result.game_id)) continue;
       for (const [player, pts] of Object.entries(result.points_awarded)) {
         standings[player] = (standings[player] ?? 0) + pts;
       }
     }
 
-    // Add points from tournament matches
-    const tournamentGames = games.filter((g) => g.tournament_mode);
+    // Add points from tournament matches (check both tournament_mode flag and scoring_mode)
+    const tournamentGames = games.filter(
+      (g) => g.tournament_mode || g.scoring_mode === 'tournament',
+    );
     for (const game of tournamentGames) {
       const gameMatches = matches.filter((m) => m.game_id === game.id && m.completed);
       for (const match of gameMatches) {
@@ -134,7 +141,7 @@ export class GauntletViewComponent implements OnInit {
     if (!g || games.length === 0) return false;
 
     return games.every((game) => {
-      if (game.tournament_mode) {
+      if (game.tournament_mode || game.scoring_mode === 'tournament') {
         // For tournament games, check if all matches are completed
         const gameMatches = this.matches().filter((m) => m.game_id === game.id);
         return gameMatches.length > 0 && gameMatches.every((m) => m.completed);

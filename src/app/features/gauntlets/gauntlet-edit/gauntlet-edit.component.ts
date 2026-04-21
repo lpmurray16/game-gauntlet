@@ -115,10 +115,10 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
   }
 
   hasResult(gameId: string): boolean {
-    // Games with tournament_mode=false need results; games with tournament_mode=true need matches
+    // Games with tournament_mode or scoring_mode === 'tournament' need matches; others need results
     const game = this.games.find((g) => g.id === gameId);
     if (!game) return false;
-    if (game.tournament_mode) {
+    if (game.tournament_mode || game.scoring_mode === 'tournament') {
       return game.completed; // Tournament games marked completed at game level
     }
     return game.completed; // Regular games marked completed when result saved
