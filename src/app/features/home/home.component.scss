@@ -1,16 +1,25 @@
 .subtitle {
   color: var(--color-text-muted);
-  margin-top: 0.25rem;
-  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
 }
 
 .section-title {
-  font-size: 0.8rem;
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  margin-bottom: 0.75rem;
-  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-neon-cyan);
+  margin-bottom: 1rem;
+  font-weight: 400;
+  text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+
+  &::before {
+    content: '> ';
+    color: var(--color-primary);
+  }
 }
 
 .gauntlet-grid {
@@ -28,20 +37,49 @@
   display: block;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
   text-decoration: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  animation: slide-in-up 0.3s ease both;
 
   &:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 1px var(--color-primary-dim);
+    transform: translateY(-2px);
+  }
+
+  &.card-active {
+    border-left-color: var(--color-neon-green);
+
+    &:hover {
+      box-shadow: -4px 0 16px rgba(0, 255, 136, 0.3), var(--shadow-card);
+      border-color: var(--color-neon-green);
+    }
+  }
+
+  &.card-draft {
+    border-left-color: var(--color-text-dim);
+
+    &:hover {
+      border-color: var(--color-border-hover);
+    }
+  }
+
+  &.card-completed {
+    border-left-color: var(--color-neon-cyan);
+
+    &:hover {
+      box-shadow: -4px 0 16px rgba(0, 245, 255, 0.3), var(--shadow-card);
+      border-color: var(--color-neon-cyan);
+    }
   }
 
   h3 {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     color: var(--color-text);
-    margin: 0.5rem 0 0.35rem;
+    margin: 0.6rem 0 0.35rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
   }
 }
 
@@ -53,14 +91,18 @@
 }
 
 .game-count {
-  font-size: 12px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
   color: var(--color-text-dim);
+  letter-spacing: 0.05em;
 }
 
 .players {
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 12px;
   color: var(--color-text-muted);
   margin-bottom: 0.75rem;
+  letter-spacing: 0.04em;
 }
 
 .card-progress-bar {
@@ -79,7 +121,9 @@
 
 .empty-icon {
   font-size: 3rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 12px rgba(255, 106, 0, 0.6));
+  animation: neon-blink 2s ease-in-out infinite;
 }
 
 .error-banner {
@@ -105,26 +149,31 @@
   align-items: center;
   gap: 1rem;
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-neon-yellow);
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
   text-decoration: none;
-  transition: border-color var(--transition);
+  transition: box-shadow 200ms ease, transform 200ms ease;
 
   &:hover {
-    border-color: var(--color-border-hover);
+    box-shadow: var(--glow-yellow);
+    transform: translateY(-2px);
   }
 
   strong {
     display: block;
-    color: var(--color-text);
-    font-size: 0.95rem;
+    color: var(--color-neon-yellow);
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 8px rgba(255, 230, 0, 0.5);
   }
 
   p {
-    font-size: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
     color: var(--color-text-muted);
-    margin-top: 0.1rem;
+    margin-top: 0.25rem;
   }
 }
 

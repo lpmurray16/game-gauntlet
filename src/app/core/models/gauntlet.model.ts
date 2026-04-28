@@ -64,6 +64,21 @@ export interface Gauntlet {
   updated?: string;
 }
 
+// Lightweight per-game completion status (gauntlet_game_status collection)
+export interface GauntletGameStatus {
+  id?: string;
+  gauntlet_id: string;
+  game_id: string;
+  completed: boolean;
+}
+
+// Live running standings stored server-side (gauntlet_standings collection)
+export interface GauntletStandings {
+  id?: string;
+  gauntlet_id: string;
+  points: Record<string, number>;
+}
+
 // Final standings when gauntlet completes
 export interface GauntletResult {
   id: string;

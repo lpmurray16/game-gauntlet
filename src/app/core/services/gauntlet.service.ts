@@ -6,6 +6,8 @@ import {
   TournamentMatch,
   GauntletResult,
   GameResult,
+  GauntletGameStatus,
+  GauntletStandings,
   ScoringMode,
 } from '../models/gauntlet.model';
 
@@ -16,6 +18,11 @@ export class GauntletService {
   private matchesCol = 'tournament_matches';
   private gameResultsCol = 'gauntlet_game_results';
   private resultCol = 'gauntlet_results';
+  private gameStatusCol = 'gauntlet_game_status';
+  private standingsCol = 'gauntlet_standings';
+  private gameResultIdCache = new Map<string, string>(); // "gauntletId:gameId" -> record id
+  private gameStatusIdCache = new Map<string, string>(); // "gauntletId:gameId" -> record id
+  private standingsIdCache = new Map<string, string>(); // gauntletId -> record id
 
   constructor(private pbs: PocketBaseService) {}
 
@@ -183,65 +190,79 @@ export class GauntletService {
     const rounds = Math.ceil(Math.log2(numPlayers));
     const byes = Math.pow(2, rounds) - numPlayers;
 
-    const matches: TournamentMatch[] = [];
+    const allMatches: TournamentMatch[] = [];
     const matchMap = new Map<string, string>(); // round,match_num -> match_id
 
-    // Round 1: Create matches with byes
-    let matchNumber = 1;
+    // Round 1: Build all match payloads, then create in parallel
+    const round1Count = Math.pow(2, rounds - 1);
+    const round1Payloads: Omit<TournamentMatch, 'id'>[] = [];
     let playerIdx = 0;
 
-    for (let i = 0; i < Math.pow(2, rounds - 1); i++) {
+    for (let i = 0; i < round1Count; i++) {
       const player1 = shuffled[playerIdx++] || 'BYE';
       const player2 = i < byes ? 'BYE' : shuffled[playerIdx++] || 'BYE';
-
-      // Handle byes - auto-advance to next round
       const hasBye = player1 === 'BYE' || player2 === 'BYE';
 
-      const match = await this.createMatch({
+      round1Payloads.push({
         gauntlet_id: gauntletId,
         game_id: gameId,
         round: 1,
-        match_number: matchNumber,
+        match_number: i + 1,
         player1: player1 === 'BYE' ? '' : player1,
         player2: player2 === 'BYE' ? '' : player2,
         winner: hasBye ? (player1 === 'BYE' ? player2 : player1) : undefined,
         completed: hasBye,
       });
-
-      matches.push(match);
-      matchMap.set(`1,${matchNumber}`, match.id);
-      matchNumber++;
     }
 
-    // Subsequent rounds
+    const round1Matches = await Promise.all(round1Payloads.map((p) => this.createMatch(p)));
+    round1Matches.forEach((m) => {
+      allMatches.push(m);
+      matchMap.set(`1,${m.match_number}`, m.id);
+    });
+
+    // Subsequent rounds: each round depends on the previous, so process round-by-round
+    // but parallelize within each round
     for (let round = 2; round <= rounds; round++) {
       const matchesInRound = Math.pow(2, rounds - round);
-      for (let i = 1; i <= matchesInRound; i++) {
+      const roundPayloads = Array.from({ length: matchesInRound }, (_, idx) => {
+        const i = idx + 1;
         const prevMatch1 = matchMap.get(`${round - 1},${i * 2 - 1}`);
         const prevMatch2 = matchMap.get(`${round - 1},${i * 2}`);
+        return {
+          payload: {
+            gauntlet_id: gauntletId,
+            game_id: gameId,
+            round,
+            match_number: i,
+            player1: '',
+            player2: '',
+            completed: false,
+            source_match_1: prevMatch1,
+            source_match_2: prevMatch2,
+          } as Omit<TournamentMatch, 'id'>,
+          prevMatch1,
+          prevMatch2,
+        };
+      });
 
-        const match = await this.createMatch({
-          gauntlet_id: gauntletId,
-          game_id: gameId,
-          round,
-          match_number: i,
-          player1: '', // Will be computed from source match winner
-          player2: '', // Will be computed from source match winner
-          completed: false,
-          source_match_1: prevMatch1,
-          source_match_2: prevMatch2,
-        });
+      const roundMatches = await Promise.all(roundPayloads.map((r) => this.createMatch(r.payload)));
 
-        matches.push(match);
-        matchMap.set(`${round},${i}`, match.id);
-
-        // Update previous matches to point to this match
-        if (prevMatch1) await this.updateMatch(prevMatch1, { next_match_id: match.id });
-        if (prevMatch2) await this.updateMatch(prevMatch2, { next_match_id: match.id });
-      }
+      // Batch next_match_id updates for all previous-round matches in parallel
+      const nextMatchUpdates: Promise<TournamentMatch>[] = [];
+      roundMatches.forEach((match, idx) => {
+        allMatches.push(match);
+        matchMap.set(`${round},${match.match_number}`, match.id);
+        const { prevMatch1, prevMatch2 } = roundPayloads[idx];
+        if (prevMatch1)
+          nextMatchUpdates.push(this.updateMatch(prevMatch1, { next_match_id: match.id }));
+        if (prevMatch2)
+          nextMatchUpdates.push(this.updateMatch(prevMatch2, { next_match_id: match.id }));
+      });
+      await Promise.all(nextMatchUpdates);
     }
 
-    return matches;
+    return allMatches;
   }
 
   // Advance winner to next match
@@ -258,33 +279,113 @@ export class GauntletService {
     const result = await this.pbs.pb.collection(this.gameResultsCol).getFullList({
       filter: `gauntlet_id="${gauntletId}"`,
     });
-    return result.map((r) => this.deserializeGameResult(r));
+    const deserialized = result.map((r) => this.deserializeGameResult(r));
+    deserialized.forEach((r) => {
+      this.gameResultIdCache.set(`${r.gauntlet_id}:${r.game_id}`, r.id!);
+    });
+    return deserialized;
   }
 
   async saveGameResult(result: GameResult): Promise<GameResult> {
-    // Check if result already exists
-    const existing = await this.pbs.pb.collection(this.gameResultsCol).getFullList({
-      filter: `gauntlet_id="${result.gauntlet_id}" && game_id="${result.game_id}"`,
-    });
+    const cacheKey = `${result.gauntlet_id}:${result.game_id}`;
+    const cachedId = result.id || this.gameResultIdCache.get(cacheKey);
+    const payload = {
+      scores: JSON.stringify(result.scores),
+      points_awarded: JSON.stringify(result.points_awarded),
+      completed: result.completed,
+    };
 
-    if (existing.length > 0) {
-      // Update existing
-      const record = await this.pbs.pb.collection(this.gameResultsCol).update(existing[0].id, {
-        scores: JSON.stringify(result.scores),
-        points_awarded: JSON.stringify(result.points_awarded),
-        completed: result.completed,
-      });
+    if (cachedId) {
+      const record = await this.pbs.pb.collection(this.gameResultsCol).update(cachedId, payload);
       return this.deserializeGameResult(record);
     } else {
-      // Create new
       const record = await this.pbs.pb.collection(this.gameResultsCol).create({
         gauntlet_id: result.gauntlet_id,
         game_id: result.game_id,
-        scores: JSON.stringify(result.scores),
-        points_awarded: JSON.stringify(result.points_awarded),
-        completed: result.completed,
+        ...payload,
       });
-      return this.deserializeGameResult(record);
+      const saved = this.deserializeGameResult(record);
+      this.gameResultIdCache.set(cacheKey, saved.id!);
+      return saved;
+    }
+  }
+
+  // ==================== Game Status ====================
+
+  async getGameStatuses(gauntletId: string): Promise<GauntletGameStatus[]> {
+    const result = await this.pbs.pb.collection(this.gameStatusCol).getFullList({
+      filter: `gauntlet_id="${gauntletId}"`,
+    });
+    const deserialized = result.map((r) => this.deserializeGameStatus(r));
+    deserialized.forEach((s) => {
+      this.gameStatusIdCache.set(`${s.gauntlet_id}:${s.game_id}`, s.id!);
+    });
+    return deserialized;
+  }
+
+  async upsertGameStatus(status: GauntletGameStatus): Promise<GauntletGameStatus> {
+    const cacheKey = `${status.gauntlet_id}:${status.game_id}`;
+    const cachedId = status.id || this.gameStatusIdCache.get(cacheKey);
+    const payload = { completed: status.completed };
+
+    if (cachedId) {
+      const record = await this.pbs.pb.collection(this.gameStatusCol).update(cachedId, payload);
+      return this.deserializeGameStatus(record);
+    } else {
+      const record = await this.pbs.pb.collection(this.gameStatusCol).create({
+        gauntlet_id: status.gauntlet_id,
+        game_id: status.game_id,
+        ...payload,
+      });
+      const saved = this.deserializeGameStatus(record);
+      this.gameStatusIdCache.set(cacheKey, saved.id!);
+      return saved;
+    }
+  }
+
+  // ==================== Standings ====================
+
+  async getStandings(gauntletId: string): Promise<GauntletStandings | null> {
+    const cachedId = this.standingsIdCache.get(gauntletId);
+    if (cachedId) {
+      try {
+        const record = await this.pbs.pb.collection(this.standingsCol).getOne(cachedId);
+        return this.deserializeStandings(record);
+      } catch {
+        this.standingsIdCache.delete(gauntletId);
+      }
+    }
+    try {
+      const records = await this.pbs.pb.collection(this.standingsCol).getList(1, 1, {
+        filter: `gauntlet_id="${gauntletId}"`,
+      });
+      if (!records.items.length) return null;
+      const standings = this.deserializeStandings(records.items[0]);
+      this.standingsIdCache.set(gauntletId, standings.id!);
+      return standings;
+    } catch {
+      return null;
+    }
+  }
+
+  async upsertStandings(
+    gauntletId: string,
+    points: Record<string, number>,
+  ): Promise<GauntletStandings> {
+    const cachedId = this.standingsIdCache.get(gauntletId);
+    const payload = { points: JSON.stringify(points) };
+
+    if (cachedId) {
+      const record = await this.pbs.pb.collection(this.standingsCol).update(cachedId, payload);
+      return this.deserializeStandings(record);
+    } else {
+      const record = await this.pbs.pb.collection(this.standingsCol).create({
+        gauntlet_id: gauntletId,
+        ...payload,
+      });
+      const saved = this.deserializeStandings(record);
+      this.standingsIdCache.set(gauntletId, saved.id!);
+      return saved;
     }
   }
 
@@ -425,6 +526,23 @@ export class GauntletService {
       final_standings: this.parseJson(r.final_standings, {}),
       winner: r.winner,
       completed_at: r.completed_at,
+    };
+  }
+
+  private deserializeGameStatus(r: any): GauntletGameStatus {
+    return {
+      id: r.id,
+      gauntlet_id: r.gauntlet_id,
+      game_id: r.game_id,
+      completed: r.completed || false,
+    };
+  }
+
+  private deserializeStandings(r: any): GauntletStandings {
+    return {
+      id: r.id,
+      gauntlet_id: r.gauntlet_id,
+      points: this.parseJson(r.points, {}),
     };
   }
 

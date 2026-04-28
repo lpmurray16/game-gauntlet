@@ -1,9 +1,11 @@
 .nav {
-  background: var(--color-bg-card);
-  border-bottom: 1px solid var(--color-border);
+  background: rgba(8, 10, 15, 0.95);
+  border-bottom: 1px solid var(--color-neon-cyan);
+  box-shadow: 0 1px 0 0 var(--color-neon-cyan), var(--glow-cyan);
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(8px);
 }
 
 .nav-inner {
@@ -25,20 +27,29 @@
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--color-text);
+  gap: 0.6rem;
+  font-family: var(--font-pixel);
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--color-primary);
   text-decoration: none;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(255, 106, 0, 0.7);
+  text-transform: uppercase;
 
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-hover);
+    text-shadow: 0 0 16px rgba(255, 106, 0, 1);
+  }
+
+  @media (max-width: 600px) {
+    font-size: 0.5rem;
   }
 }
 
 .nav-brand-icon {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  filter: drop-shadow(0 0 6px rgba(255, 106, 0, 0.8));
 }
 
 .nav-links {
@@ -47,31 +58,38 @@
   gap: 0.25rem;
 
   a {
-    font-size: 13px;
-    font-weight: 600;
+    font-family: var(--font-pixel);
+    font-size: 7px;
+    font-weight: 400;
     color: var(--color-text-muted);
-    padding: 0.4rem 0.75rem;
+    padding: 0.45rem 0.85rem;
     border-radius: var(--radius-sm);
     text-decoration: none;
-    transition: color var(--transition), background var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid transparent;
+    transition: color var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
 
     &:hover {
-      color: var(--color-text);
-      background: var(--color-bg-elevated);
+      color: var(--color-neon-cyan);
+      border-color: var(--color-neon-cyan);
+      background: var(--color-neon-cyan-dim);
     }
 
     &.active {
-      color: var(--color-primary);
-      background: var(--color-primary-dim);
+      color: var(--color-neon-cyan);
+      border-color: var(--color-neon-cyan);
+      background: var(--color-neon-cyan-dim);
+      box-shadow: var(--glow-cyan);
     }
 
     i {
-      font-size: 14px;
+      font-size: 12px;
     }
 
     @media (max-width: 600px) {
       padding: 0.4rem 0.6rem;
-      font-size: 12px;
+      font-size: 7px;
     }
   }
 }

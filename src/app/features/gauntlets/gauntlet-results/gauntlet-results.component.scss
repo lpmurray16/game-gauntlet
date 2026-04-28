@@ -2,30 +2,45 @@
   text-align: center;
   margin-bottom: 2.5rem;
 
-  h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+  h1 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.04em;
+  }
 }
 
 .trophy-icon {
-  font-size: 3rem;
-  margin-bottom: 0.75rem;
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 20px rgba(255, 230, 0, 0.7));
+  animation: neon-blink 2.5s ease-in-out infinite;
 }
 
 .subtitle {
-  font-size: 0.95rem;
-  color: var(--color-text-muted);
-  margin-bottom: 1rem;
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  color: var(--color-neon-cyan);
+  text-shadow: var(--glow-cyan);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .winner-banner {
   display: inline-block;
-  background: linear-gradient(135deg, var(--color-primary-dim), rgba(240, 192, 64, 0.1));
-  border: 1px solid var(--color-warning);
-  color: var(--color-warning);
-  font-size: 1.1rem;
-  font-weight: 700;
+  background: rgba(255, 230, 0, 0.08);
+  border: 1px solid var(--color-neon-yellow);
+  color: var(--color-neon-yellow);
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  font-weight: 400;
   padding: 0.6rem 1.5rem;
-  border-radius: 999px;
+  border-radius: 2px;
   margin-top: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: var(--glow-yellow);
+  animation: neon-pulse 2s ease-in-out infinite;
 }
 
 .results-layout {
@@ -36,7 +51,21 @@
 }
 
 .standings-section {
-  h2 { font-size: 1rem; margin-bottom: 1rem; }
+  h2 {
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+    margin-bottom: 1.25rem;
+    text-transform: uppercase;
+
+    &::before {
+      content: '// ';
+      color: var(--color-primary);
+      opacity: 0.7;
+    }
+  }
 }
 
 .standings-list {
@@ -53,10 +82,28 @@
   border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
+  transition: box-shadow 200ms ease;
+
+  &:nth-child(1) {
+    border-left-color: var(--color-neon-yellow);
+    background: rgba(255, 230, 0, 0.05);
+    box-shadow: -3px 0 12px rgba(255, 230, 0, 0.15);
+  }
+
+  &:nth-child(2) {
+    border-left-color: #c0c0c0;
+    background: rgba(192, 192, 192, 0.04);
+  }
+
+  &:nth-child(3) {
+    border-left-color: #cd7f32;
+    background: rgba(205, 127, 50, 0.04);
+  }
 
   &.winner {
-    background: linear-gradient(135deg, var(--color-primary-dim), rgba(240, 192, 64, 0.08));
-    border-color: var(--color-warning);
+    border-color: var(--color-neon-yellow);
+    box-shadow: -3px 0 12px rgba(255, 230, 0, 0.2), var(--glow-yellow);
   }
 }
 
@@ -68,19 +115,38 @@
 
 .player-name {
   flex: 1;
+  font-family: var(--font-mono);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
+  letter-spacing: 0.04em;
 }
 
 .pts {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--color-primary);
+  font-family: var(--font-pixel);
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--color-neon-yellow);
+  text-shadow: 0 0 8px rgba(255, 230, 0, 0.5);
+  letter-spacing: 0.04em;
 }
 
 .game-breakdown {
-  h2 { font-size: 1rem; margin-bottom: 1rem; }
+  h2 {
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+    margin-bottom: 1.25rem;
+    text-transform: uppercase;
+
+    &::before {
+      content: '// ';
+      color: var(--color-primary);
+      opacity: 0.7;
+    }
+  }
 }
 
 .breakdown-row {
@@ -91,7 +157,9 @@
   border-bottom: 1px solid var(--color-border);
   gap: 1rem;
 
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .breakdown-game {
@@ -110,16 +178,20 @@
 }
 
 .bd-title {
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text);
+  letter-spacing: 0.02em;
 }
 
 .bd-mode {
-  font-size: 10px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  margin-top: 0.2rem;
 }
 
 .breakdown-scores {
@@ -141,9 +213,11 @@
 }
 
 .bd-pts {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-success);
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  font-weight: 400;
+  color: var(--color-neon-green);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
 }
 
 .result-actions {

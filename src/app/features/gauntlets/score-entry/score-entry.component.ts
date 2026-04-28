@@ -30,6 +30,7 @@ export class ScoreEntryComponent implements OnInit {
   gameId = '';
   scores: Record<string, number> = {};
   winner: Record<string, number> = {};
+  allResults: GameResult[] = [];
 
   // Tournament mode
   matches = signal<TournamentMatch[]>([]);
@@ -58,6 +59,7 @@ export class ScoreEntryComponent implements OnInit {
       this.game.set(cfg ?? null);
 
       if (cfg) {
+        this.allResults = results;
         const existing = results.find((r) => r.game_id === cfg.id);
         for (const p of g.player_names) {
           this.scores[p] = existing?.scores[p] ?? 0;
@@ -269,7 +271,24 @@ export class ScoreEntryComponent implements OnInit {
         points_awarded: pointsAwarded,
         completed: true,
       };
-      await this.gauntletService.saveGameResult(result);
+      const saved = await this.gauntletService.saveGameResult(result);
+      const updatedResults = [...this.allResults.filter((r) => r.game_id !== cfg.id), saved];
+      const points: Record<string, number> = {};
+      for (const p of g.player_names) points[p] = 0;
+      for (const r of updatedResults) {
+        if (!r.completed) continue;
+        for (const [player, pts] of Object.entries(r.points_awarded)) {
+          points[player] = (points[player] ?? 0) + pts;
+        }
+      }
+      await Promise.all([
+        this.gauntletService.upsertGameStatus({
+          gauntlet_id: g.id,
+          game_id: cfg.id,
+          completed: true,
+        }),
+        this.gauntletService.upsertStandings(g.id, points),
+      ]);
       this.router.navigate(['/gauntlets', g.id]);
     } catch {
       this.error.set('Failed to save results.');
@@ -322,7 +341,24 @@ export class ScoreEntryComponent implements OnInit {
         points_awarded: pointsAwarded,
         completed: true,
       };
-      await this.gauntletService.saveGameResult(result);
+      const saved = await this.gauntletService.saveGameResult(result);
+      const updatedResults = [...this.allResults.filter((r) => r.game_id !== game.id), saved];
+      const standingPoints: Record<string, number> = {};
+      for (const p of g.player_names) standingPoints[p] = 0;
+      for (const r of updatedResults) {
+        if (!r.completed) continue;
+        for (const [player, pts] of Object.entries(r.points_awarded)) {
+          standingPoints[player] = (standingPoints[player] ?? 0) + pts;
+        }
+      }
+      await Promise.all([
+        this.gauntletService.upsertGameStatus({
+          gauntlet_id: g.id,
+          game_id: game.id,
+          completed: true,
+        }),
+        this.gauntletService.upsertStandings(g.id, standingPoints),
+      ]);
       this.router.navigate(['/gauntlets', g.id]);
     } catch {
       this.error.set('Failed to save tournament results.');

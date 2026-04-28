@@ -7,6 +7,8 @@ import {
   GauntletGame,
   TournamentMatch,
   GameResult,
+  GauntletGameStatus,
+  GauntletStandings,
 } from '../../../core/models/gauntlet.model';
 
 @Component({
@@ -21,6 +23,8 @@ export class GauntletViewComponent implements OnInit {
   games = signal<GauntletGame[]>([]);
   results = signal<GameResult[]>([]);
   matches = signal<TournamentMatch[]>([]);
+  gameStatuses = signal<GauntletGameStatus[]>([]);
+  serverStandings = signal<GauntletStandings | null>(null);
   loading = signal(true);
   error = signal('');
   finishing = signal(false);
@@ -34,16 +38,20 @@ export class GauntletViewComponent implements OnInit {
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     try {
-      const [g, games, results, matches] = await Promise.all([
+      const [g, games, results, matches, statuses, standings] = await Promise.all([
         this.gauntletService.getById(id),
         this.gauntletService.getGames(id),
         this.gauntletService.getGameResults(id),
         this.gauntletService.getMatches(id),
+        this.gauntletService.getGameStatuses(id),
+        this.gauntletService.getStandings(id),
       ]);
       this.gauntlet.set(g);
       this.games.set(games);
       this.results.set(results);
       this.matches.set(matches);
+      this.gameStatuses.set(statuses);
+      this.serverStandings.set(standings);
     } catch {
       this.error.set('Could not load gauntlet.');
     } finally {
@@ -53,30 +61,35 @@ export class GauntletViewComponent implements OnInit {
 
   get standings() {
     const g = this.gauntlet();
+    if (!g) return [];
+
+    // Prefer server-stored standings if available
+    const serverStandings = this.serverStandings();
+    if (serverStandings) {
+      const pts = serverStandings.points;
+      // Ensure all players are represented even if not yet in standings
+      const merged: Record<string, number> = {};
+      for (const player of g.player_names) merged[player] = pts[player] ?? 0;
+      return Object.entries(merged).sort((a, b) => b[1] - a[1]);
+    }
+
+    // Fallback: compute client-side from results and tournament matches
     const games = this.games();
     const results = this.results();
     const matches = this.matches();
-    if (!g) return [];
-
-    // Compute standings from results and tournament matches
     const standings: Record<string, number> = {};
-    for (const player of g.player_names) {
-      standings[player] = 0;
-    }
+    for (const player of g.player_names) standings[player] = 0;
 
-    // Add points from non-tournament results (tournament games are recalculated from matches below)
     const tournamentGameIds = new Set(
       games.filter((g) => g.tournament_mode || g.scoring_mode === 'tournament').map((g) => g.id),
     );
     for (const result of results) {
-      // Skip tournament games - their points are calculated from matches below
       if (tournamentGameIds.has(result.game_id)) continue;
       for (const [player, pts] of Object.entries(result.points_awarded)) {
         standings[player] = (standings[player] ?? 0) + pts;
       }
     }
 
-    // Add points from tournament matches (check both tournament_mode flag and scoring_mode)
     const tournamentGames = games.filter(
       (g) => g.tournament_mode || g.scoring_mode === 'tournament',
     );
@@ -136,17 +149,21 @@ export class GauntletViewComponent implements OnInit {
   }
 
   get allGamesComplete(): boolean {
-    const g = this.gauntlet();
     const games = this.games();
-    if (!g || games.length === 0) return false;
+    if (games.length === 0) return false;
 
+    const statuses = this.gameStatuses();
+    // If we have status records for all games, use them (fast path)
+    if (statuses.length === games.length) {
+      return statuses.every((s) => s.completed);
+    }
+
+    // Fallback: check results and matches directly
     return games.every((game) => {
       if (game.tournament_mode || game.scoring_mode === 'tournament') {
-        // For tournament games, check if all matches are completed
         const gameMatches = this.matches().filter((m) => m.game_id === game.id);
         return gameMatches.length > 0 && gameMatches.every((m) => m.completed);
       } else {
-        // For regular games, check if result is completed
         const r = this.getResult(game.id);
         return r?.completed;
       }

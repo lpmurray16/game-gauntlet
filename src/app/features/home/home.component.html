@@ -23,7 +23,7 @@
     <h2 class="section-title">Active</h2>
     <div class="gauntlet-grid">
       @for (g of activeGauntlets; track g.id) {
-      <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card">
+      <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card card-active">
         <div class="gauntlet-card-top">
           <span class="badge badge-active">Active</span>
           <span class="game-count">{{ g.player_names.length }} players</span>
@@ -41,7 +41,7 @@
     <h2 class="section-title">Drafts</h2>
     <div class="gauntlet-grid">
       @for (g of draftGauntlets; track g.id) {
-      <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card">
+      <a [routerLink]="['/gauntlets', g.id]" class="gauntlet-card card-draft">
         <div class="gauntlet-card-top">
           <span class="badge badge-draft">Draft</span>
           <span class="game-count">{{ g.player_names.length }} players</span>
@@ -56,9 +56,11 @@
 
   @if (activeGauntlets.length === 0 && draftGauntlets.length === 0) {
   <div class="empty-state">
-    <div class="empty-icon">⚔</div>
-    <h3>No active gauntlets</h3>
-    <p>Create a new gauntlet to get started.</p>
+    <div class="empty-icon">🕹️</div>
+    <h3
+      style="font-family:var(--font-pixel);font-size:0.7rem;color:var(--color-neon-cyan);text-shadow:0 0 10px rgba(0,245,255,0.6);">
+      INSERT COIN</h3>
+    <p style="font-family:var(--font-mono);margin-top:0.75rem;">No gauntlets running. Start one to compete.</p>
     <a routerLink="/gauntlets/new" class="btn-primary"
       style="display:inline-block;margin-top:1.25rem;text-decoration:none;padding:0.55rem 1.25rem;border-radius:6px;font-weight:600;font-size:14px;">
       Create Gauntlet
