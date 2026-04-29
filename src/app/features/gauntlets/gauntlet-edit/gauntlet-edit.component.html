@@ -66,6 +66,10 @@
           <span class="added-game-title">{{ cfg.title }}</span>
           <span class="added-game-meta">{{ cfg.platform }}</span>
         </div>
+        <div class="reorder-btns">
+          <button class="btn-ghost btn-sm reorder-btn" (click)="moveGame(i, -1)" [disabled]="i === 0" title="Move up">▲</button>
+          <button class="btn-ghost btn-sm reorder-btn" (click)="moveGame(i, 1)" [disabled]="i === games.length - 1" title="Move down">▼</button>
+        </div>
         @if (hasResult(cfg.id)) {
         <span class="result-lock" title="Has recorded results — cannot remove">🔒</span>
         } @else {

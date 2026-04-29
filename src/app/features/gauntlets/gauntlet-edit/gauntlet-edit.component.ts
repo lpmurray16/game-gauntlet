@@ -128,6 +128,12 @@ export class GauntletEditComponent implements OnInit, OnDestroy {
     this.games.splice(i, 1);
   }
 
+  moveGame(i: number, direction: -1 | 1) {
+    const j = i + direction;
+    if (j < 0 || j >= this.games.length) return;
+    [this.games[i], this.games[j]] = [this.games[j], this.games[i]];
+  }
+
   openAddGame() {
     this.newGame = this.blankGame();
     this.rawgQuery = '';
