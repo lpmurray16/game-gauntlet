@@ -14,7 +14,7 @@ export function calculatePoints(
     for (const [player, score] of sorted) {
       awarded[player] = score === topScore ? config.points_for_winner : 0;
     }
-  } else if (config.scoring_mode === 'rank') {
+  } else if (config.scoring_mode === 'rank' || config.scoring_mode === 'racing') {
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     sorted.forEach(([player], i) => {
       awarded[player] = config.points_for_rank[i] ?? 0;

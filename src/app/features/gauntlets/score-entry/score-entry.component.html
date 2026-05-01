@@ -32,6 +32,8 @@
         <span class="mode-tag">Who Won · Select the winner</span>
         } @else if (game()!.scoring_mode === 'rank') {
         <span class="mode-tag">Ranked · Enter scores, highest score = 1st place</span>
+        } @else if (game()!.scoring_mode === 'racing') {
+        <span class="mode-tag">ENTER THE PLACE EACH PLAYER FINISHED IN</span>
         } @else {
         <span class="mode-tag">High Score · Enter scores, winner pts + performance bonus</span>
         }

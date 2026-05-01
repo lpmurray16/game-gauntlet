@@ -54,7 +54,7 @@
 }
 
 html {
-  font-size: 18px;
+  font-size: 20px;
   height: 100%;
 }
 
@@ -78,6 +78,34 @@ body {
         transparent 2px,
         rgba(0, 0, 0, 0.08) 2px,
         rgba(0, 0, 0, 0.08) 4px);
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    left: -50%;
+    right: -50%;
+    height: 80%;
+    background:
+      linear-gradient(90deg, rgb(236, 17, 192) 2px, transparent 1px),
+      linear-gradient(rgba(247, 14, 200, 0.904) 2px, transparent 1px);
+    background-size: 60px 30px;
+    transform: perspective(500px) rotateX(55deg);
+    animation: grid-move 4s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent 70%);
+  }
+}
+
+@keyframes grid-move {
+  0% {
+    transform: perspective(500px) rotateX(55deg) translateY(0);
+  }
+
+  100% {
+    transform: perspective(500px) rotateX(55deg) translateY(30px);
   }
 }
 

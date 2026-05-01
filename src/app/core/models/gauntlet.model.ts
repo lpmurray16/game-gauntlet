@@ -1,4 +1,4 @@
-export type ScoringMode = 'winner' | 'rank' | 'highscore' | 'tournament';
+export type ScoringMode = 'winner' | 'rank' | 'highscore' | 'tournament' | 'racing';
 export type GauntletStatus = 'draft' | 'active' | 'completed';
 
 // Represents a game in a gauntlet (from gauntlet_games collection)

@@ -149,6 +149,10 @@ export class ScoreEntryComponent implements OnInit {
     return this.game()?.scoring_mode === 'rank';
   }
 
+  get isRacing() {
+    return this.game()?.scoring_mode === 'racing';
+  }
+
   get isTournament() {
     return this.game()?.scoring_mode === 'tournament' || this.game()?.tournament_mode;
   }

@@ -176,6 +176,7 @@
             <select [(ngModel)]="cfg.scoring_mode">
               <option value="winner">Who Won (winner takes all points)</option>
               <option value="rank">Ranked (configurable points per position)</option>
+              <option value="racing">Racing (enter finishing place, points per position)</option>
               <option value="highscore">High Score (enter scores, winner pts + performance bonus)</option>
               <option value="tournament">Tournament (1v1 bracket, points per match win)</option>
             </select>
@@ -202,7 +203,7 @@
           <p class="mode-hint">Performance bonus: <strong>(score ÷ winning score) × 2</strong> added to each player</p>
           }
 
-          @if (cfg.scoring_mode === 'rank') {
+          @if (cfg.scoring_mode === 'rank' || cfg.scoring_mode === 'racing') {
           <div class="rank-points">
             <label class="rank-label">Points per rank position</label>
             <div class="rank-inputs">
